@@ -1,4 +1,3 @@
-
 import User from '../models/user.js';
 
 class UserRepository {
@@ -9,7 +8,6 @@ class UserRepository {
 
     // Crea un nuevo usuario en la base de datos
     async create(userData) {
-        // La contraseña hasheada debe venir de la capa de servicio.
         const newUser = new User(userData);
         return await newUser.save();
     }
