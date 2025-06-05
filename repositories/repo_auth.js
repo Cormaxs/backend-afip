@@ -1,5 +1,6 @@
 import User from '../models/user.js';
 
+
 class UserRepository {
     // Busca un usuario por su nombre de usuario
     async findByUsername(username) {
@@ -16,6 +17,7 @@ class UserRepository {
     async findById(id) {
         return await User.findById(id);
     }
+    
 
     // Actualiza un usuario
     async update(id, updateData) {

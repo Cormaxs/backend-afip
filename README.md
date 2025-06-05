@@ -9,6 +9,7 @@
 **Repositories** -> /repositories/auth.js -> interactua directamente con la base de datos usando /models/.  
 **Models** ->  /models/user.js -> crea los modelos de los datos, en este caso mongodb.  
 **Db** -> /db/db.js -> unica coneccion a la base de datos.  
+**Middlewares** -> verifican los datos basicos de entrada, tambien verifican si el username existe en la base de datos
 
 ## Endpoints
 
@@ -44,5 +45,11 @@ Instalar nodemon si lo deseas.
 
 ```bash
 npm install --save-dev nodemon
+```
+
+Correr el programa
+
+```bash
+npm run dev 
 ```
 

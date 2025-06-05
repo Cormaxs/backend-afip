@@ -26,12 +26,12 @@ export async function comparePassword(plainPassword, hashedPassword) {
 }
 
 
-// --- Ejemplo de uso al registrar un usuario ---
+//haseha la password
 export async function registerUser(plainPassword) {
     try {
-        const hashedPassword = await hashPassword(plainPassword);
-        return  hashedPassword ;
+        return await hashPassword(plainPassword);
     } catch (error) {
         console.error("Error en el registro del usuario:", error.message);
+        throw new Error("Error al registrar el usuario.");
     }
 }
