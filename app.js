@@ -1,7 +1,9 @@
 import Express from "express";
 import env from "dotenv";
 import cors from "cors";
-import { router } from "./routes/auth_routes.js";
+import { auth_router } from "./routes/auth_routes.js";
+import { facturas_Router } from "./routes/facturas-routes.js";
+import { product_Router } from "./routes/product-routes.js";
 import connectDB from "./db/connect.js";
 
 
@@ -15,8 +17,9 @@ connectDB();
 
 
 
-app.use("/auth", router)
-
+app.use("/auth", auth_router)
+app.use("/facturas", facturas_Router);
+app.use("/productos", product_Router);
 
 app.use("/", (req, res)=>{
     res.send("raiz general");

@@ -2,11 +2,11 @@ import {Router} from "express";
 import {login, register} from "../controllers/auth_controllers.js";
 import {validateRegistration, validateLogin} from "../middlewares/auth_middlewares.js";
 
-export const router = Router();
+export const auth_router = Router();
 
-router.get("/login", (req, res)=>{
+auth_router.get("/login", (req, res)=>{
     res.send("Login Page");
 })
-router.post("/login", validateLogin, login);
+auth_router.post("/login", validateLogin, login);
 
-router.post("/register", validateRegistration, register);
+auth_router.post("/register", validateRegistration, register);

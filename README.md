@@ -11,21 +11,11 @@
 **Db** -> /db/db.js -> unica coneccion a la base de datos.  
 **Middlewares** -> verifican los datos basicos de entrada, tambien verifican si el username existe en la base de datos
 
-## Endpoints
+## Indice
 
-Reciben los usuarios, datos username y password
-
-POST
-
-```bash
-/auth/register
-```
-
-POST
-
-```bash
-/auth/login
-```
+[Autenticación](./Documentacion/auth.md)
+[Facturación](./Documentacion/facturas.md)
+[Productos](./Documentacion/productos.md)
 
 ### Como usar
 
@@ -51,5 +41,4 @@ Correr el programa
 
 ```bash
 npm run dev 
-```
-
+```  
