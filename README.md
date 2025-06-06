@@ -13,9 +13,9 @@
 
 ## Indice
 
-[Autenticación](./Documentacion/auth.md)
-[Facturación](./Documentacion/facturas.md)
-[Productos](./Documentacion/productos.md)
+[Autenticación](./Documentacion/auth.md).  
+[Facturación](./Documentacion/facturas.md).  
+[Productos](./Documentacion/productos.md).  
 
 ### Como usar
 
