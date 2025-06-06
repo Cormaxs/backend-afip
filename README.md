@@ -1,4 +1,4 @@
-# login basico en node js
+# Facturita 🥐 gestor de inventario y facturación.  
 
 ## Recorrido de los datos
 
