@@ -7,6 +7,14 @@ class ProductRepository {
         const newProduct = new Product(product);
         return await newProduct.save();
     }
+
+    async updateProduct (producto) { 
+       return  Product.findByIdAndUpdate(producto.id, producto, { new: true });
+    }
+
+    async deleteProduct (productoId) {
+        return await Product.findByIdAndDelete(productoId);
+    }
    
 }
 

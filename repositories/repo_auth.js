@@ -28,6 +28,12 @@ class UserRepository {
     async delete(id) {
         return await User.findByIdAndDelete(id);
     }
+    async deleteUserAndProducts(id) {
+        // Aquí podrías implementar la lógica para eliminar un usuario y sus productos asociados
+        // Por ejemplo, si tienes un modelo de Producto que tiene una referencia al usuario
+        // await Product.deleteMany({ userId: id });
+        return await User.findByIdAndDelete(id);
+    }
 
    
 }
