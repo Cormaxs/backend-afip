@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
     },
     email:{
         type: String,
-        required:false
+        required:true
     },
     createdAt: {
         type: Date,
