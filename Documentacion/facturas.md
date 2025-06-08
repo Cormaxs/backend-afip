@@ -216,6 +216,3 @@ observaciones (Notas Adicionales)
 create_pdf.js -> recibe el JSON desde facturas con los datos listos para pasarlo al PDF, tambien recibe el qr en base64 para agregarlo al JSON y luego al PDF.  
 create_qr.js -> recibe el link y lo convierte a qr.  
 estructura_pdf.js -> contiene la estructura de la factura electronica estilizada, sanitiza algunos datos como el CUIT y pone todos los datos en donde deben ir.  
-
-
-
