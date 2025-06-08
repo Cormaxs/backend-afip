@@ -20,6 +20,7 @@ Facilitando el manejo de inventario en unos simples clicks al igual que la factu
 [Autenticación](./Documentacion/auth.md)
 [Facturación](./Documentacion/facturas.md)
 [Productos](./Documentacion/productos.md)
+[Credenciales-AFIP-ARCA](./Documentacion/credenciales-afip.md)  
 
 ### Como usar
 
