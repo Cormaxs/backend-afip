@@ -22,3 +22,11 @@ Luego en nuestra computadora creamos un archivo certificado-afip.crt y pegamos e
 Teniendo el certificado-afip.crt tenemos que autorizar a nuestra aplicación para poder facturar, vamos a la opcion Crear autorizacion a servicio:
 ![Img Alt](./images/4.png)  
 solo debemos seleccionar el servicio que queremos autorizar, en este caso la facturación electronica y le damos autorizar.  
+
+## interactuar programáticamente con los Web Services de AFIP para emitir facturas  
+
+1) Obtener un Ticket de Acceso (TA) del WSAA (Web Service de Autenticación y Autorización): Este TA es una credencial temporal (Token y Sign) que AFIP te da para autorizar tus llamadas a otros servicios.  
+
+2) Utilizar el TA para llamar al WSFEV1 (Web Service de Factura Electrónica): Con el TA, podrás solicitar el CAE (Código de Autorización Electrónica) para tus facturas.
+
+3) Una ves que obtenemos el token y sign podemos pedir el CAE, debemos enviar un archivo xml con los datos necesarios segun sea factura A,B,C, etc. Nos devolvera A -> aprobado R -> reprobado N -> procesando. De ahi debemos sacar el CAE y CAEFchVto para poner en la factura.pdf que le damos al cliente.  
