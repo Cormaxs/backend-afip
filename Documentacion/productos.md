@@ -2,9 +2,15 @@
 
 Uso un modelo User y otro Product, al crear un producto, le referencio el ID del creador. Haciendo que el producto apunte al usuario.  
 
+## Estructuración de como se pasan los datos
+
+/controllers/product_controllers.js -> Pasa la información del producto hacia services.  
+/services/product_services.js -> Agrega el producto a la base de datos usando /repositories/repo_product.js -> usa la clase ProductRepository para manejar las consultas a la base de datos.  
+
 ## Endpoints
 
 POST  
+Agrega un producto.  
 
 ```bash
 /productos/add
@@ -33,7 +39,37 @@ Espera un JSON :
 }
 ```  
 
-## Estructuración de como se pasan los datos
+--------------------------------------------------------
 
-/controllers/product_controllers.js -> Pasa la información del producto hacia services.  
-/services/product_services.js -> Agrega el producto a la base de datos usando /repositories/repo_product.js -> usa la clase ProductRepository para manejar las consultas a la base de datos.  
+POST  
+Actualiza los campos del producto elegido, deberia estar el id en el mismo archivo, antes de enviar los campos a modificar agregar el _id.  
+
+```bash
+/productos/update
+```
+
+Espera un JSON :  
+
+```bash
+{
+  "_id":"6844917754c23c79e50a3c88",
+  "marca": "ya no es logitech",
+  "categoria": "ahora es auriculares"
+}
+```  
+
+--------------------------------------------------------
+
+DELETE  
+Elimina un producto pasandole solo el _id del producto.  
+
+```bash
+/productos/delete
+```
+
+Espera un JSON :  
+
+```bash
+{
+  "_id":"6844917754c23c79e50a3c88"
+}

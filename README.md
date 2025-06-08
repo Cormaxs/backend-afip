@@ -1,4 +1,7 @@
-# Facturita 🥐 gestor de inventario y facturación.  
+# [Facstock](https://facstock.com) gestor de inventario y facturación  
+
+La idea de [Facstock](https://facstock.com) es crear un gestor de inventario para pequeños, medianos y grandes emprendimientos.  
+Facilitando el manejo de inventario en unos simples clicks al igual que la facturacion compatible con [ARCA-AFIP](https://www.afip.gob.ar/landing/default.asp).  
 
 ## Recorrido de los datos
 
@@ -9,13 +12,14 @@
 **Repositories** -> /repositories/auth.js -> interactua directamente con la base de datos usando /models/.  
 **Models** ->  /models/user.js -> crea los modelos de los datos, en este caso mongodb.  
 **Db** -> /db/db.js -> unica coneccion a la base de datos.  
-**Middlewares** -> verifican los datos basicos de entrada, tambien verifican si el username existe en la base de datos
+**Middlewares** -> verifican los datos basicos de entrada, tambien verifican si el username existe en la base de datos.  
+**Utils** -> archivos extras como JWT, bcrypt, etc.  
 
 ## Indice
 
-[Autenticación](./Documentacion/auth.md).  
-[Facturación](./Documentacion/facturas.md).  
-[Productos](./Documentacion/productos.md).  
+[Autenticación](./Documentacion/auth.md)
+[Facturación](./Documentacion/facturas.md)
+[Productos](./Documentacion/productos.md)
 
 ### Como usar
 
