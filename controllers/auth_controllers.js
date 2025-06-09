@@ -1,5 +1,5 @@
 import {loginUser_services, registerUser_services, updateUser_services, deleteUser_services} from '../services/auth_services.js';
-
+import {create_user_folder} from './create_user_folder/create_folder.js';
 //captura los datos del usuario y contraseña para iniciar sesión, los manda a services
 export async function login(req, res) {
     const { username, password } = req.body;
@@ -11,9 +11,11 @@ export async function login(req, res) {
 //captura los datos del usuario y contraseña para registrarse, los manda a services
 export async function register(req, res) {
     let datos = req.body; 
-    console.log("Datos a registrar:", datos);
+    // console.log("Datos a registrar:", datos);
   const creado = await registerUser_services(datos)
-  if(creado) {res.status(201).send({ creado }); return;}
+  if(creado){ 
+    if(await create_user_folder(creado._id)){res.status(201).send({ creado }); return;} 
+}
   res.status(400).send({ error: "Error al crear el usuario" });
 }
 

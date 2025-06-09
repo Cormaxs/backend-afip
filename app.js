@@ -7,6 +7,7 @@ import { product_Router } from "./routes/product-routes.js";
 import {admin_router} from "./routes/admin/admin_routes.js";
 import {gerente_router} from "./routes/roles_users/gerente_routes.js";
 import {vendedor_router} from "./routes/roles_users/vendedor_routes.js";
+import {afip_Router} from "./routes/afip-routes.js";
 import connectDB from "./db/connect.js";
 
 
@@ -26,6 +27,7 @@ app.use("/productos", product_Router);
 app.use("/admin",admin_router);
 app.use("/gerente", gerente_router);
 app.use("/vendedor", vendedor_router);
+app.use("/afip", afip_Router);
 
 app.use("/", (req, res)=>{
     res.send("raiz general"); 

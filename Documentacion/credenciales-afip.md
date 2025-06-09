@@ -29,4 +29,19 @@ solo debemos seleccionar el servicio que queremos autorizar, en este caso la fac
 
 2) Utilizar el TA para llamar al WSFEV1 (Web Service de Factura Electrónica): Con el TA, podrás solicitar el CAE (Código de Autorización Electrónica) para tus facturas.
 
-3) Una ves que obtenemos el token y sign podemos pedir el CAE, debemos enviar un archivo xml con los datos necesarios segun sea factura A,B,C, etc. Nos devolvera A -> aprobado R -> reprobado N -> procesando. De ahi debemos sacar el CAE y CAEFchVto para poner en la factura.pdf que le damos al cliente.  
+3) Una ves que obtenemos el token y sign podemos pedir el CAE, debemos enviar un archivo xml con los datos necesarios segun sea factura A,B,C, etc. Nos devolvera:  
+A -> aprobado  
+R -> reprobado  
+N -> procesando.  
+De ahi debemos sacar el CAE y CAEFchVto para poner en la factura.pdf que le damos al cliente.  
+
+## ¿Dónde se guardan los archivos?
+
+Los archivos de cada usuario se guardan de forma individual en la carpeta.  
+/raiz-users/:id.  
+dentro hay 2 carpetas mas.  
+/afip -> contiene certificado.crt, private_key.key, afip_credentials.json, 20250609T005-loginTicketResponse.xml.  
+/facturas-pdf -> todas las facturas emitidas por el usuario.  
+
+**¿porqué hacerlo así?**  
+La separacion de cada usuario es por motivos de eficiencia y seguridad.  
