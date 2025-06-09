@@ -14,12 +14,14 @@ Facilitando el manejo de inventario en unos simples clicks al igual que la factu
 **Db** -> /db/db.js -> unica coneccion a la base de datos.  
 **Middlewares** -> verifican los datos basicos de entrada, tambien verifican si el username existe en la base de datos.  
 **Utils** -> archivos extras como JWT, bcrypt, etc.  
+**raiz-users** -> /raiz-users/id/afip-facturas -> ruta de almacenamiento para las credenciales necesarias del usuario para emitir facturas, y guardar los pdf de las ventas.  
+**interactuar-afip-wsaa** -> carpeta para generar dinamicamente los archivos necesarios para facturar, se almacenan en la raiz, esta dividido en pasos.  
 
 ## Indice
 
-[Autenticación](./Documentacion/auth.md)
-[Facturación](./Documentacion/facturas.md)
-[Productos](./Documentacion/productos.md)
+[Autenticación](./Documentacion/auth.md)  
+[Facturación](./Documentacion/facturas.md)  
+[Productos](./Documentacion/productos.md)  
 [Credenciales-AFIP-ARCA](./Documentacion/credenciales-afip.md)  
 
 ### Como usar
