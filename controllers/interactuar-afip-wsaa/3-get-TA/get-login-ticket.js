@@ -7,8 +7,7 @@ import soap from 'soap';
 import xml2js from 'xml2js';
 import env from 'dotenv';
 
-env.config(); // Cargar variables de entorno desde .env
-// Configuration
+env.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 

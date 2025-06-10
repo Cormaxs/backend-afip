@@ -387,7 +387,7 @@ export const formatCurrency = (amount) => {
             width: 'auto',
             stack: [
               { text: 'Generado por:', fontSize: 7, alignment: 'right', color: '#666666' },
-              { text: 'Facturita', fontSize: 9, bold: true, alignment: 'right', color: '#444444' }
+              { text: 'Facstock', fontSize: 9, bold: true, alignment: 'right', color: '#444444' }
             ],
             margin: [15, 0, 0, 0]
           }

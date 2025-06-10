@@ -1,21 +1,19 @@
 import { exec } from 'child_process';
-import fs from 'fs'; // Necesitamos fs para crear directorios
+import fs from 'fs'; 
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-// Obtenemos __dirname equivalente en ES Modules
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// El nombre del archivo de la clave
+
 const keyFileName = 'private_key.key';
 
 export async function generatePrivateKey(id) {
     // Definimos la ruta base para el usuario y el subdirectorio 'afip'
-    // Esta ruta incluye el 'id' para hacerla específica por usuario.
     const userAfipDirPath = path.join(__dirname, `${process.env.RAIZ_USERS}${id}/afip`);
-    
     // Ahora, la ruta completa donde se guardará la clave
     const keyFilePath = path.join(userAfipDirPath, keyFileName);
 
@@ -28,7 +26,6 @@ export async function generatePrivateKey(id) {
             console.error(`Error al crear el directorio ${userAfipDirPath}: ${dirError.message}`);
             return reject(dirError);
         }
-
         // El comando de OpenSSL para generar la clave, usando la nueva keyFilePath
         const command = `openssl genrsa -out "${keyFilePath}" 2048`;
 
@@ -50,4 +47,3 @@ export async function generatePrivateKey(id) {
     });
 }
 
-//generatePrivateKey("68461df88d6bb3a5695042be")
