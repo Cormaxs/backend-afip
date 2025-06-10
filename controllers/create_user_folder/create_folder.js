@@ -9,7 +9,7 @@ const __dirname = dirname(__filename);
 export async function create_user_folder(id_user) {
 
     // 1. Definir rutas (ajusta los niveles según necesites)
-    const projectRoot = join(__dirname, '../../'); // Dos niveles arriba del archivo actual
+    const projectRoot = join(__dirname, `${process.env.CREATE_RAIZ}`); // Dos niveles arriba del archivo actual
     const raizUsersPath = join(projectRoot, 'raiz-users');
     const userFolderPath = join(raizUsersPath, id_user.toString());
     const userAfipPath = join(userFolderPath, 'afip');
