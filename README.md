@@ -3,6 +3,8 @@
 La idea de [Facstock](https://facstock.com) es crear un gestor de inventario para pequeños, medianos y grandes emprendimientos.  
 Facilitando el manejo de inventario en unos simples clicks al igual que la facturacion compatible con [ARCA-AFIP](https://www.afip.gob.ar/landing/default.asp).  
 
+## Documentación profunda hecha con IA [aquí](https://deepwiki.com/Cormaxs/backend-afip)  
+
 ## Recorrido de los datos
 
 **Entrada** -> app.js -> levanta el servidor y deriba a routes.  
