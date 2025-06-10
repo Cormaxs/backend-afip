@@ -6,7 +6,7 @@ import { dirname } from 'path';
 import soap from 'soap';
 import xml2js from 'xml2js';
 
-// Configuración
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -170,25 +170,25 @@ export async function getLoginTicket() {
     const timestamps = generateTimestampId();
     
     try {
-        // 1. Validar credenciales
+        // Validar credenciales
         const { certPath, keyPath } = await validateCredentials();
         
-        // 2. Generar solicitud
+        // Generar solicitud
         const xmlFilePath = await generateLoginTicketRequest(timestamps.seqNr, timestamps);
         
-        // 3. Firmar solicitud
+        // Firmar solicitud
         const cmsFilePath = await signRequest(timestamps.seqNr, xmlFilePath, certPath, keyPath);
         
-        // 4. Codificar a Base64
+        // Codificar a Base64
         const cmsB64FilePath = await encodeToBase64(timestamps.seqNr, cmsFilePath);
         
-        // 5. Llamar al WSAA
+        // Llamar al WSAA
         const xmlResponse = await callWSAA(timestamps.seqNr, cmsB64FilePath);
         
-        // 6. Parsear respuesta
+        // Parsear respuesta
         const credentials = await parseResponse(xmlResponse);
         
-        // 7. Guardar credenciales
+        // Guardar credenciales
         await saveCredentials(credentials);
         
         console.log('[SUCCESS] Login Ticket obtenido exitosamente:');
@@ -212,6 +212,7 @@ export async function getLoginTicket() {
     }
 }
 
+/*
 // Ejecución directa si es el módulo principal
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     console.log('[INFO] Ejecutando como script principal...');
@@ -224,4 +225,4 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
             console.error('\n[FATAL] ERROR GRAVE: No se pudo completar el proceso.');
             process.exit(1);
         });
-}
+}*/

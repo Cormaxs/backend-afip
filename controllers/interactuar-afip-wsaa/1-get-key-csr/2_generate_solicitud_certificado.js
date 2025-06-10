@@ -4,11 +4,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-// Redefine __filename y __dirname para módulos ES
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Función auxiliar para ejecutar comandos de shell
+
 const executeShellCommand = async (command) => {
     return new Promise((resolve, reject) => {
         exec(command, (error, stdout, stderr) => {
@@ -26,7 +26,7 @@ const executeShellCommand = async (command) => {
 
 export async function generateCsr(datos, id) {
     const userAfipDirPath = path.join(__dirname, `${process.env.RAIZ_USERS}${id}/afip`);
-    const keyFileName = 'private_key.key'; // Asegúrate de que esta clave exista
+    const keyFileName = 'private_key.key';
     const keyFilePath = path.join(userAfipDirPath, keyFileName);
     const csrFileName = 'certificate_request.csr';
     const csrFilePath = path.join(userAfipDirPath, csrFileName);
@@ -36,12 +36,9 @@ export async function generateCsr(datos, id) {
     } catch (error) {
         throw new Error(`La clave privada no se encontró en: ${keyFilePath}. Por favor, genérala primero.`);
     }
-
     const { country, state, locality, organization, organizationalUnit, emailAddress, cuit } = datos;
-
     // CRÍTICO para AFIP: El CUIT debe ir en el SerialNumber
     const serialNumber = `CUIT ${cuit}`;
-
     // Crea un archivo de configuración temporal para OpenSSL
     const configContent = `
 [ req ]
@@ -60,9 +57,8 @@ commonName = CN=${organization}
 emailAddress = ${emailAddress}
 serialNumber = ${serialNumber}
 `;
-    const configFileName = `openssl_config_${id}.cnf`; // Nombre de archivo de configuración único por ID
+    const configFileName = `openssl_config_${id}.cnf`; 
     const configFilePath = path.join(userAfipDirPath, configFileName);
-
     try {
         await fs.writeFile(configFilePath, configContent);
         console.log(`Generando CSR en: ${csrFilePath}`);

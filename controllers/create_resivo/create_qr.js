@@ -23,19 +23,3 @@ export async function generateQrCodeBase64(url, outputPath = null) {
     throw err;
   }
 }
-
-// --- Ejemplo de uso ---
-/*
-(async () => {
-  const urlToEncode = 'https://google.com/';
-  const outputPngPath = './google_qr.png'; // Ruta para guardar el QR como PNG
-
-  try {
-    const qrBase64 = await generateQrCodeBase64(urlToEncode, outputPngPath);
-    console.log('\nQR Base64 generado (primera parte):', qrBase64.substring(0, 100) + '...');
-    // El QR Base64 completo es lo que usarías en pdfmake
-  } catch (error) {
-    console.error('Fallo al generar el QR de ejemplo:', error);
-  }
-})();
- */

@@ -1,47 +1,41 @@
-import fs from 'fs/promises'; // Importa el módulo fs/promises
+import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import {sendXmlToAfip} from "./peticion.js"
 import {convertXmlToJson} from "./convertir.js";
 
-// Configuración
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 
 //pasa los datos json a xml para enviarlo a afip y obtener el CAE
-export async function createXML(req, res){
-    const {id, Auth, FeCAEReq} = req.body; // Desestructuramos FeCAEReq completo
+export async function createXML(body, id){
+    
+    const { Auth, FeCAEReq} = body; 
     const FeDetReq = FeCAEReq.FeDetReq; // Extraemos el array FeDetReq para facilitar el acceso
-
+//console.log(id, Auth, FeCAEReq);
     // Obtengo el TA (Token de Acceso)
     const tokens = await TA(id);
-
     // Verifico si la fecha de vencimiento es válida
     const expirado = isBeforeOrAfterCurrentTime(tokens.expirationTime);
-
     // Si está expirado, entonces creo uno nuevo (o manejo el error)
     if(expirado) {
         // En un entorno de producción, aquí deberías invocar la lógica para renovar el token
         // y luego reintentar la operación. Por ahora, solo enviamos un mensaje de error.
         return res.status(401).send(`El token AFIP está expirado. Por favor, renuévelo.`);
     }
-
     // Los datos de Auth.Token y Auth.Sign se sobrescriben con los obtenidos del TA
     Auth.Token = tokens.token;
     Auth.Sign = tokens.sign;
 
-    // Actualizar CbteDesde y CbteHasta con los valores que querés (ej. 7)
-    // Esto se hace directamente en el objeto FeDetReq[0] que ya tenemos.
-    // **Importante:** Tu JSON de entrada tiene CbteDesde: 100, CbteHasta: 100
-    // y aquí lo estás sobrescribiendo a 7. Asegúrate que esto sea lo deseado.
-    FeDetReq[0].CbteDesde = 11;
-    FeDetReq[0].CbteHasta = 11;
+    // deberiamos resivir estos datos desde la base de datos
+    FeDetReq[0].CbteDesde = 35;
+    FeDetReq[0].CbteHasta = 35;
 
     // --- Lógica para generar el XML usando un template literal ---
-
-    // 1. Prepara las partes de Tributos e Iva para el template literal
+    //  Prepara las partes de Tributos e Iva para el template literal
     let tributosXml = '';
     if (FeDetReq[0].Tributos && FeDetReq[0].Tributos.length > 0) {
         // Mapea cada tributo a su representación XML
@@ -143,18 +137,15 @@ export async function createXML(req, res){
   
 
     const convertidojson = await convertXmlToJson(cae); // Convierte la respuesta XML a JSON
-    console.log(convertidojson.Envelope.Body.FECAESolicitarResponse.FECAESolicitarResult.FeDetResp.FECAEDetResponse); //selecciono manualmente
-    res.status(200).send(convertidojson); // Envía el XML generado como respuesta al frontend
+    return convertidojson;
 }
 
 
 //obtiene el token de acceso, sign y fecha de vencimiento del usuario mediante id
 export async function TA(id){
     const userAfipDirPath = path.join(__dirname, `${process.env.RAIZ_USERS}${id}/afip`);
-
     // Ruta completa al archivo afip_credentials.json
     const credentialsFilePath = path.join(userAfipDirPath, 'afip_credentials.json');
-
     try {
         const fileContent = await fs.readFile(credentialsFilePath, { encoding: 'utf8' });
         const credentials = JSON.parse(fileContent);
@@ -167,7 +158,7 @@ export async function TA(id){
 
 //verifica si esta expirado
 function isBeforeOrAfterCurrentTime(dateTimeString) {
-    const now = new Date(); // Current time is Monday, June 9, 2025 at 5:12:15 PM -03.
+    const now = new Date(); 
     const targetDate = new Date(dateTimeString);
 
     if (targetDate.getTime() < now.getTime()) {
