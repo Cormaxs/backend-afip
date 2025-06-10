@@ -1,5 +1,5 @@
 import {Router} from "express";
-import {login, register, deleteUser, update} from "../controllers/auth_controllers.js";
+import {login, register, deleteUser, update} from "../controllers/auth/auth_controllers.js";
 import {validateRegistration, validateLogin} from "../middlewares/auth_middlewares.js";
 
 export const auth_router = Router();
