@@ -1,33 +1,96 @@
-import {loginUser_services, registerUser_services, updateUser_services, deleteUser_services} from '../../services/auth_services.js';
+import {loginUser_services, registerUser_services, updateUser_services, deleteUser_services, get_user_id} from '../../services/auth_services.js';
 import {create_user_folder} from '../create_user_folder/create_folder.js';
-//captura los datos del usuario y contraseña para iniciar sesión, los manda a services
+
+
 export async function login(req, res) {
-    const { username, password } = req.body;
-     const access = await loginUser_services(username, password)
-     if (access) {res.status(200).send({ username, password: access.password }); return;}
-    res.status(401).send({ error: "Usuario o contraseña incorrectos" });
+  try {
+      const { username, password } = req.body;
+      const user = await loginUser_services(username, password);
+      return res.status(200).json({ username: user.username, id: user._id }); // O un token JWT aquí
+  } catch (error) {
+      console.error(`Error en el controlador login: ${error.message}`);
+      return res.status(401).json({ error: "Usuario o contraseña incorrectos." });
+  }
 }
 
-//captura los datos del usuario y contraseña para registrarse, los manda a services
 export async function register(req, res) {
-    let datos = req.body; 
-    // console.log("Datos a registrar:", datos);
-  const creado = await registerUser_services(datos)
-  if(creado){ 
-    if(await create_user_folder(creado._id)){res.status(201).send({ creado }); return;} 
+  try {
+      const datos = req.body;
+      const creado = await registerUser_services(datos);
+      // Si el usuario se creó, intenta crear la carpeta
+      if (creado) {
+          const folderCreated = await create_user_folder(creado._id);
+          if (folderCreated) {
+              return res.status(201).json({ message: "Usuario registrado y carpeta creada con éxito.", user: creado });
+          } else {
+              console.error(`Advertencia: Usuario '${creado.username}' creado, pero la carpeta no pudo ser creada.`);
+              return res.status(202).json({ message: "Usuario registrado, pero hubo un problema al crear la carpeta.", user: creado }); // 202 Accepted, pero con advertencia
+          }
+      }
+      return res.status(400).json({ error: "No se pudo completar el registro del usuario." });
+  } catch (error) {
+      console.error(`Error en el controlador register para '${req.body.username || "desconocido"}':`, error.message);
+      if (error.message.includes("El nombre de usuario ya está en uso.")) {
+          return res.status(409).json({ error: error.message }); // 409 Conflict
+      } else if (error.message.includes("No se pudo completar el registro del usuario por un error interno.")) {
+          return res.status(500).json({ error: "Error interno del servidor al registrar el usuario. Inténtalo de nuevo más tarde." });
+      } else {
+          return res.status(500).json({ error: "Error desconocido al registrar el usuario. Inténtalo de nuevo más tarde." });
+      }
+  }
 }
-  res.status(400).send({ error: "Error al crear el usuario" });
-}
-
 
 export async function update(req, res) {
-    const datos = req.body;
-    const actualizados = await updateUser_services(datos);
-    res.status(200).send({ message:`Usuario actualizado correctamente :`, actualizados });
+  try {
+      const id = req.params.id; 
+      const datos = req.body;
+      const actualizados = await updateUser_services(id, datos);
+      if (!actualizados) {
+          return res.status(404).json({ error: "Usuario no encontrado para actualizar." });
+      }
+      return res.status(200).json({ message: "Usuario actualizado correctamente.", user: actualizados });
+  } catch (error) {
+      console.error(`Error en el controlador update para ID ${req.params.id || 'desconocido'}:`, error.message);
+      if (error.message.includes("ID de usuario es requerido")) {
+          return res.status(400).json({ error: error.message });
+      } else if (error.message.includes("No se pudo actualizar el usuario. El usuario no existe o no se realizaron cambios.")) {
+          return res.status(404).json({ error: error.message }); // Podría ser 404 si el servicio indica que no existe
+      } else {
+          return res.status(500).json({ error: "No se pudo actualizar el usuario debido a un error interno." });
+      }
+  }
 }
 
 export async function deleteUser(req, res) {
-    const {id} = await req.body;
-   const eliminado = await deleteUser_services(id);
-    res.status(200).send({ message: `Usuario eliminado correctamente:`, eliminado });
-} ;
+  try {
+      const id = req.params.id;
+      const eliminado = await deleteUser_services(id);
+      if (!eliminado) {
+          return res.status(404).json({ error: "Usuario no encontrado para eliminar." });
+      }
+      return res.status(200).json({ message: "Usuario eliminado correctamente.", user: eliminado });
+  } catch (error) {
+      console.error(`Error en el controlador deleteUser para ID ${req.params.id || 'desconocido'}:`, error.message);
+      if (error.message.includes("ID de usuario es requerido")) {
+          return res.status(400).json({ error: error.message });
+      } else if (error.message.includes("No se pudo eliminar el usuario. El usuario no existe o ya ha sido eliminado.")) {
+          return res.status(404).json({ error: error.message }); // Podría ser 404
+      } else {
+          return res.status(500).json({ error: "No se pudo eliminar el usuario debido a un error interno." });
+      }
+  }
+}
+
+export async function getUserId(req, res){
+  try{
+    const {id} = req.body;
+    const result = await get_user_id(id);
+    if(result){
+       return res.status(200).send({result});
+    } return res.status(404).send({error: "Usuario no encontrado"});
+
+  }catch(err){
+    console.error("Error al obtener el usuario por ID:", err);
+    res.status(500).send({ error: "Error interno del servidor al obtener el usuario" });
+  }
+}
