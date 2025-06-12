@@ -1,5 +1,7 @@
 # Diseño de estructura de datos  
 
+El modelo es tener multiples empresas y a partir de esas empresar crear los usuarios, con roles.  
+
 ## /Models  
 
 **Carpetas**  

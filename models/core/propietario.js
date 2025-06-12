@@ -54,5 +54,5 @@ const userSchema = new mongoose.Schema({
     timestamps: true // `createdAt` y `updatedAt`
 });
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model('Users-logins', userSchema);
 export default User;
