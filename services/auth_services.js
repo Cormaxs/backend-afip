@@ -77,6 +77,10 @@ export async function get_user_id(id){
     }return false;
 }
 
+
+
+
+
 //creo una clase para verificar si el usuario ya existe, puedo usarla instancia de UserRepository
 class AuthService {
     constructor() {

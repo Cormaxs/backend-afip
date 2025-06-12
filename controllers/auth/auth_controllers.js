@@ -94,3 +94,5 @@ export async function getUserId(req, res){
     res.status(500).send({ error: "Error interno del servidor al obtener el usuario" });
   }
 }
+
+

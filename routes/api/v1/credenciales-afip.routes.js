@@ -17,6 +17,6 @@ afip_Router.post("/get-ta", getLoginTicket);
 
 
 //manda los datos de la factura para obtener el CAE, si esta aprobado pasoa generar la factura
-afip_Router.post("/get-cae",createXML);
+//afip_Router.post("/get-cae",createXML); -> se usa directamente desde crear factura
 /**/
 export default afip_Router;

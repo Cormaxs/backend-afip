@@ -8,6 +8,11 @@ companyRoutes.post("/update/:id", updateCompany);
 companyRoutes.delete("/delete/:id", deleteCompany);
 companyRoutes.get("/get", getCompany);
 
+
+//rutas relacionadas a la creacion de partes asociadas a la empresa
+
+
+
 //agregar a futuro rutas de 
 //filtros, relacion de empresas y productos/usuarios
 export default companyRoutes;
