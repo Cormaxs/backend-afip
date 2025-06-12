@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 
 const facturaEmitidaSchema = new mongoose.Schema({
     // --- Referencias al Emisor (Empresa), Vendedor y Punto de Venta ---
-    owner: { // La empresa principal que emite la factura
+    empresa: { // La empresa principal que emite la factura
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Empresa', // ¡CAMBIO CLAVE AQUÍ! Referencia al modelo 'Empresa'
         required: [true, 'La factura debe estar asociada a una empresa propietaria.']

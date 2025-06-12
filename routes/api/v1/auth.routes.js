@@ -14,4 +14,6 @@ auth_router.delete("/delete/:id", deleteUser);
 
 auth_router.get("/get",getUserId)
 
+
+
 export default auth_router; 

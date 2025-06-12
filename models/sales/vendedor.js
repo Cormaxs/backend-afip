@@ -25,7 +25,7 @@ const vendedorSchema = new mongoose.Schema({
     },
     
     // Referencia a la Empresa a la que pertenece el vendedor
-    owner: { // 'owner' ahora representa la empresa a la que pertenece el vendedor
+    empresa: { // 'owner' ahora representa la empresa a la que pertenece el vendedor
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Empresa', // ¡CORRECCIÓN APLICADA! Referencia al modelo 'Empresa'
         required: [true, 'Cada vendedor debe estar asociado a una empresa propietaria.']

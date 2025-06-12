@@ -25,6 +25,8 @@ Facilitando el manejo de inventario en unos simples clicks al igual que la factu
 [Facturación](./Documentacion/facturas.md)  
 [Productos](./Documentacion/productos.md)  
 [Credenciales-AFIP-ARCA](./Documentacion/credenciales-afip.md)  
+[Estructura-DB](./Documentacion/db/estructura-DB.md)  
+[Orden-creacion-collecciones](./Documentacion/db/estructura_completa_funcional.md)  
 
 ### Como usar
 
@@ -51,3 +53,5 @@ Correr el programa
 ```bash
 npm run dev 
 ```  
+
+### Rutas postman -> [Aquí](https://www.postman.com/security-engineer-64827471/backend-facstock/collection/6fh3wkj/afip)  

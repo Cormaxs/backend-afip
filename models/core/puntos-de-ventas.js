@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 
 const puntoVentaSchema = new mongoose.Schema({
     // Referencia a la empresa propietaria de este punto de venta
-    owner: {
+    empresa: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Empresa', // ¡CAMBIO CLAVE AQUÍ! Referencia al modelo 'Empresa'
         required: [true, 'El punto de venta debe pertenecer a una empresa.']
