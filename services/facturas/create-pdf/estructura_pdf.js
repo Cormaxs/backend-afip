@@ -347,8 +347,8 @@ export const formatCurrency = (amount) => {
           // Columna QR
           datos.comprobante.qrImage ? {
             image: datos.comprobante.qrImage,
-            width: 70,
-            height: 70,
+            width: 100,
+            height: 100,
             margin: [0, 0, 20, 0]
           } : {
             text: 'QR AFIP [No disponible]', // Mensaje si el QR no está
