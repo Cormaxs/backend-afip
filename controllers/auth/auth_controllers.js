@@ -1,5 +1,5 @@
 import {loginUser_services, registerUser_services, updateUser_services, deleteUser_services, get_user_id} from '../../services/auth_services.js';
-import {create_user_folder} from '../create_user_folder/create_folder.js';
+import {create_user_folder} from '../../services/create-directories/create_folder.js';
 
 
 export async function login(req, res) {

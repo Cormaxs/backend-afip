@@ -55,5 +55,3 @@ npm run dev
 ```  
 
 ### Rutas postman -> [Aquí](https://www.postman.com/security-engineer-64827471/backend-facstock/collection/6fh3wkj/afip)  
-
-### TAREA PENDIENTE -> CAMBIAR LA LOGICA DE CONTROLLERS A SERVICES EN CUANTO A CONVERSION Y LLAMADAS A AFIP-ARCA  
