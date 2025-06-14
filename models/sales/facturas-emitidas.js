@@ -157,7 +157,11 @@ const facturaEmitidaSchema = new mongoose.Schema({
     qrCodeImageUrl: { // Nuevo: Si guardas la URL de la imagen del QR
         type: String,
         trim: true
+    },
+    ubicacion: {
+        type: String
     }
+
 
 }, {
     timestamps: true // `createdAt` para la fecha de creación del registro, `updatedAt` para la última modificación
