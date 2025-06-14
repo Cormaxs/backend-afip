@@ -1,8 +1,8 @@
 import { Router } from "express";
 import {generate_key_csr} from "../../../controllers/interactuar-afip-wsaa/1-get-key-csr/get-key-csr.js";
 import {saveCrt} from "../../../controllers/interactuar-afip-wsaa/2-save-crt/save_crt.js";
-import {getLoginTicket} from "../../../controllers/interactuar-afip-wsaa/3-get-TA/get-login-ticket.js";
-import {createXML} from "../../../controllers/interactuar-afip-wsaa/4-get-cae/armarXML.js";
+import {getLoginTicket} from "../../../services/afip/3/get-login-ticket.js";
+//import {createXML} from "../../../controllers/interactuar-afip-wsaa/4-get-cae-no/armarXML.js";
 
 const afip_Router = Router();
 

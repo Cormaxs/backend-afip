@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {facturaCompleta} from "../../../controllers/facturas/crear-factura/obtener-datos.js";
+import {facturaCompleta} from "../../../controllers/facturas/obtener-datos.js";
 //import {facEmitidasControllers} from "../../../controllers/facturas/facturas-emitidas-controller.js";
 
 const facturas_Router = Router();

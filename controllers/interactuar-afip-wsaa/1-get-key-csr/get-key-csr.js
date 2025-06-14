@@ -1,5 +1,5 @@
-import { generatePrivateKey } from './1_generate_private_key.js';
-import { generateAfipCredentials } from './2_generate_solicitud_certificado.js';
+import { generatePrivateKey } from '../../../services/afip/1/1_generate_private_key.js';
+import { generateAfipCredentials } from '../../../services/afip/1/2_generate_solicitud_certificado.js';
 
 
 // pasar datos necesarios desde el frontend
