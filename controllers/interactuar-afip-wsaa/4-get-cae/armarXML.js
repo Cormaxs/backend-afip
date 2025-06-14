@@ -11,8 +11,8 @@ const __dirname = dirname(__filename);
 
 
 //pasa los datos json a xml para enviarlo a afip y obtener el CAE
-export async function createXML(body, id){
-    console.log(body, id)
+export async function createXML(body, id, numComprobante){
+    //console.log(body, id)
     const { Auth, FeCAEReq} = body; 
     const FeDetReq = FeCAEReq.FeDetReq; // Extraemos el array FeDetReq para facilitar el acceso
 //console.log(id, Auth, FeCAEReq);
@@ -31,8 +31,8 @@ export async function createXML(body, id){
     Auth.Sign = tokens.sign;
 
     // deberiamos resivir estos datos desde la base de datos
-    FeDetReq[0].CbteDesde = 37;
-    FeDetReq[0].CbteHasta = 37;
+    FeDetReq[0].CbteDesde = numComprobante;
+    FeDetReq[0].CbteHasta = numComprobante;
 
     // --- Lógica para generar el XML usando un template literal ---
     //  Prepara las partes de Tributos e Iva para el template literal

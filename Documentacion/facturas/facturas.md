@@ -2,6 +2,8 @@
 
 Todo acerca de como se ejecuta una facturacion para [afip-arca](https://www.afip.gob.ar/landing/default.asp) desde la Plataforma [FACTURITA](https://facturita.com)
 
+Ver trayecto [Developers](./armar-factura-ruta.md)  
+
 POST
 
 Recibe un input por body con el cual genera un pdf para facturas unicas

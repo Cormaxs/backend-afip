@@ -1,6 +1,7 @@
-import { createXML } from "../../interactuar-afip-wsaa/4-get-cae/armarXML.js";
-import { create_Factura } from "./factura_sola.js"; 
-
+import { createXML } from "../../interactuar-afip-wsaa/4-get-cae/armarXML.js";//convierte a json
+import { create_Factura } from "./factura_sola.js"; //crea la factura en pdf
+import {facEmitidasControllers} from "../facturas-emitidas-controller.js"; //guarda la factura en la base de datos
+import {getNumComprobante} from "../../../services/facturas_services.js";
 export async function facturaCompleta(req, res) {
     try {
         const { id, afipRequestData, facturaData } = req.body; // Desestructuramos para mayor claridad
@@ -13,7 +14,11 @@ export async function facturaCompleta(req, res) {
         }
         // 2. Comunicarse con AFIP para obtener el CAE
         // El `createXML` debería lanzar un error si algo falla en la comunicación o si AFIP no responde.
-        const aprobarFactura = await createXML(afipRequestData, id); 
+        const empresa = "684b20ec17d809f55dd91864";
+        const puntoVenta = "666b1a2c3d4e5f6a7b8c9d0f";
+        const numero = (await getNumComprobante(empresa, puntoVenta)+1);
+        //console.log(numero)
+        const aprobarFactura = await createXML(afipRequestData, id, numero); 
 
         // 3. Verificar la respuesta de AFIP
         const necesario = aprobarFactura?.Envelope?.Body?.FECAESolicitarResponse?.FECAESolicitarResult?.FeDetResp?.FECAEDetResponse;
@@ -37,9 +42,10 @@ export async function facturaCompleta(req, res) {
             const numeroComprobanteFormateado = String(necesario.CbteDesde).padStart(8, '0'); 
             facturaData.comprobante.numero = `${puntoVentaFormateado}-${numeroComprobanteFormateado}`;
             
-            // 4. Guardar la factura en tu base de datos
+            // 4.crea pdf y Guardar la factura en tu base de datos
             const facturaGenerada = await create_Factura(facturaData, id);
-            
+           // console.log("antes de pasar para base de datos",facturaData)
+            await facEmitidasControllers(facturaData, facturaGenerada);
             // 5. Enviar respuesta exitosa al cliente
             return res.status(201).json({ 
                 message: "Factura generada y aprobada por AFIP exitosamente.",
