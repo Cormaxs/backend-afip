@@ -1,14 +1,70 @@
-import {createVendedor_services} from '../../services/vendedor_services.js';
+import { registerVendedor_services, loginVendedor_services, updateVendedor_services, deleteVendedor_services} from '../../services/vendedor_services.js';
 
-export async function createVendedor(req, res) {
-    try{
-        const creado = await createVendedor_services(req.body);
-        if(creado){
-            return res.status(201).json({message: "Vendedor creado exitosamente", creado});
+export async function registerVendedor(req, res) {
+    try {
+        console.log(req.body)
+        const creado = await registerVendedor_services(req.body);
+        if (creado) {
+            return res.status(201).json({ message: "Vendedor creado exitosamente", creado });
         }
-       return res.status(400).json({message: "Error al crear el vendedor"});
-    }catch(err){
+        return res.status(400).json({ message: "Error al crear el vendedor" });
+    } catch (err) {
         console.error("Error al crear el vendedor:", err);
-        return res.status(500).json({message: "Error interno del servidor"});
+        return res.status(500).json({ message: "Error interno del servidor" });
     }
-    } 
+}
+
+export async function loginVendedor(req, res) {
+    try {
+        console.log("entrante -> ", req.body)
+        const { username, password } = req.body;
+        const user = await loginVendedor_services(username, password);
+        return res.status(200).json(user); // O un token JWT aquí
+    } catch (error) {
+        console.error(`Error en el controlador login: ${error.message}`);
+        return res.status(401).json({ error: "Usuario o contraseña incorrectos." });
+    }
+}
+
+
+export async function updateVendedor(req, res) {
+    try {
+        const id = req.params.id; 
+        const datos = req.body;
+        const actualizados = await updateVendedor_services(id, datos);
+        if (!actualizados) {
+            return res.status(404).json({ error: "Usuario no encontrado para actualizar." });
+        }
+        return res.status(200).json({ message: "Usuario actualizado correctamente.", user: actualizados });
+    } catch (error) {
+        console.error(`Error en el controlador update para ID ${req.params.id || 'desconocido'}:`, error.message);
+        if (error.message.includes("ID de usuario es requerido")) {
+            return res.status(400).json({ error: error.message });
+        } else if (error.message.includes("No se pudo actualizar el usuario. El usuario no existe o no se realizaron cambios.")) {
+            return res.status(404).json({ error: error.message }); // Podría ser 404 si el servicio indica que no existe
+        } else {
+            return res.status(500).json({ error: "No se pudo actualizar el usuario debido a un error interno." });
+        }
+    }
+  }
+  
+  export async function deleteVendedor(req, res) {
+    try {
+        const id = req.params.id;
+        const eliminado = await deleteVendedor_services(id);
+        if (!eliminado) {
+            return res.status(404).json({ error: "Usuario no encontrado para eliminar." });
+        }
+        return res.status(200).json({ message: "Usuario eliminado correctamente.", user: eliminado });
+    } catch (error) {
+        console.error(`Error en el controlador deleteUser para ID ${req.params.id || 'desconocido'}:`, error.message);
+        if (error.message.includes("ID de usuario es requerido")) {
+            return res.status(400).json({ error: error.message });
+        } else if (error.message.includes("No se pudo eliminar el usuario. El usuario no existe o ya ha sido eliminado.")) {
+            return res.status(404).json({ error: error.message }); // Podría ser 404
+        } else {
+            return res.status(500).json({ error: "No se pudo eliminar el usuario debido a un error interno." });
+        }
+    }
+  }
+

@@ -4,15 +4,16 @@ import {create_user_folder} from '../../services/create-directories/create_folde
 
 export async function login(req, res) {
   try {
+    console.log("entrante -> ", req.body)
       const { username, password } = req.body;
       const user = await loginUser_services(username, password);
-      return res.status(200).json({ username: user.username, id: user._id }); // O un token JWT aquí
+      return res.status(200).json(user); // O un token JWT aquí
   } catch (error) {
       console.error(`Error en el controlador login: ${error.message}`);
       return res.status(401).json({ error: "Usuario o contraseña incorrectos." });
   }
 }
-
+ 
 export async function register(req, res) {
   try {
       const datos = req.body;

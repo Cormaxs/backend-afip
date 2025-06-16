@@ -4,6 +4,7 @@ import UserRepository from '../repositories/repo_auth.js';
 
 export async function loginUser_services(username, password) {
     const existe = await UserRepository.findByUsername(username);
+    //console.log(existe)
     if (!existe) {
         console.error(`Intento de inicio de sesión fallido para el usuario: ${username}. Usuario no encontrado.`);
         throw new Error("Credenciales inválidas."); // Error genérico para seguridad

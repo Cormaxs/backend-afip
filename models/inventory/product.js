@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 
 const ProductSchema = new mongoose.Schema({
     // Referencia a la empresa propietaria del producto
-    owner: {
+    empresa: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Empresa', // ¡CAMBIO CLAVE AQUÍ! Referencia al modelo 'Empresa'
         required: [true, 'Cada producto debe pertenecer a una empresa.']
