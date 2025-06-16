@@ -1,10 +1,13 @@
 
 import { Router } from "express";
-import {createVendedor} from "../../../controllers/vendedor/vendedor_controllers.js";
+import {registerVendedor, loginVendedor, updateVendedor, deleteVendedor} from "../../../controllers/vendedor/vendedor_controllers.js";
 
 
 const vendorRoutes = Router();
 
-vendorRoutes.post("/create", createVendedor)
+vendorRoutes.post("/register", registerVendedor)
+vendorRoutes.post("/login", loginVendedor)
+vendorRoutes.post("/update/:id", updateVendedor)
+vendorRoutes.delete("/delete/:id", deleteVendedor)
 
 export default vendorRoutes;

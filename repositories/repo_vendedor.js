@@ -4,7 +4,7 @@ import {Vendedor} from '../models/index.js';
 class VendedorRepository {
     // Busca un usuario por su nombre de usuario
     async findByUsername(username) {
-        return await Vendedor.findOne({ Vendedorname });
+        return await Vendedor.findOne({ username });
     }
 
     // Crea un nuevo usuario en la base de datos
