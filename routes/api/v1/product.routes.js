@@ -12,8 +12,11 @@ product_Router.delete("/delete/:id",delete_product);
 
 product_Router.get("/get/:id",get_product_by_id);
 
-product_Router.get("/:id",get_all_products_company_controllers); //obtiene todos los productos de una empresa especifica
-
 product_Router.get("/get", get_all_products);
+
+product_Router.get("/:id",get_all_products_company_controllers); //obtiene todos los productos de una empresa 
+                                                                //especifica solo o con filtros, nombre, categoria, etc
+
+
 
 export default product_Router;

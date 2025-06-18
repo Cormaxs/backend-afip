@@ -9,21 +9,24 @@ class PuntoDeVentaRepository {
         return await PuntoDeVenta.findById(id);
     }
 
-    async findAll(options = {}) {
-        const { page = 1, limit = 10, category, sortBy, order } = options;
-        const query = {};
-        if (category) {
-            query.category = category; 
-        }
+    async findAll(empresaId, options = {}) {
+        const { page = 1, limit = 10, sortBy, order } = options;
+        const query = { empresa: empresaId }; // Filtra por el ID de la empresa
+    
         let PuntoDeVentasQuery = PuntoDeVenta.find(query)
-                                 .skip((page - 1) * limit)
-                                 .limit(parseInt(limit));
+            .skip((page - 1) * limit)
+            .limit(parseInt(limit));
+    
         if (sortBy) {
             const sortOrder = order === 'desc' ? -1 : 1;
-            PuntoDeVentasQuery = PuntoDeVentasQuery.sort({ [sortBy]: sortOrder });
+            PuntoDeVentasQuery = PuntoDeVentasQuery.sort({
+                [sortBy]: sortOrder
+            });
         }
+    
         return await PuntoDeVentasQuery.exec();
     }
+    
 
     async updatePuntoDeVenta(id, updateData) {
         return await PuntoDeVenta.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });

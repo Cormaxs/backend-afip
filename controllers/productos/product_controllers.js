@@ -111,7 +111,7 @@ export async function get_all_products(req, res) {
 
 export async function get_all_products_company_controllers(req, res) {
     try {
-        const { page, limit, category } = req.query;
+        const { page, limit, category, producto } = req.query;
         // Cambiamos 'id' a 'company_id' para mayor claridad, asumiendo que tu ruta es algo como /products/company/:company_id
         const { id } = req.params; 
 
@@ -119,12 +119,13 @@ export async function get_all_products_company_controllers(req, res) {
         if (!id) {
             return res.status(400).json({ error: "Falta el ID de la empresa." });
         }
-        console.log(id, page , limit, category)
+        console.log(id, page , limit, category, producto)
         const products = await get_all_products_company_services( 
             id, // Pasamos el ID de la empresa al servicio
             page, 
             limit, 
-            category 
+            category,
+            producto
         );
 
         if (!products || products.length === 0) {

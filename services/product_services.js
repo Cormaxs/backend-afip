@@ -41,15 +41,8 @@ export async function get_all_products_services(options = {}) {
     return false;
 } 
 
-export async function get_all_products_company_services( company_id, page, limit, category ){
-    try {
-        // Aquí podrías añadir lógica de negocio adicional si fuera necesaria,
-        // como validar el company_id o transformar los datos antes de pasarlos al repositorio.
-
-        const products = await ProductRepository.get_products_company( company_id, page, limit, category );
+export async function get_all_products_company_services( company_id, page, limit, category, producto ){
+        const products = await ProductRepository.get_products_company( company_id, page, limit, category, producto );
+        console.log("encontrado -> ",products)
         return products;
-    } catch (error) {
-        console.error("Error en get_all_products_by_company_id_service:", error.message);
-        throw error; // Propaga el error para que el controlador lo maneje
-    }
 }

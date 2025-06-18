@@ -37,3 +37,13 @@ export async function get_company(id) {
         return result;
     }  return("No se pudo encontrar la empresa. Es posible que el ID no exista.");
 }
+
+
+
+export async function get_company_all() {
+    const result = await EmpresaRepository.find_All();
+    //console.log("services -> ", result)
+    if (result) {
+        return result;
+    }  return("No se pudo encontrar la empresa. Es posible que el ID no exista.");
+}
