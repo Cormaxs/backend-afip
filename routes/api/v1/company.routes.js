@@ -1,12 +1,15 @@
 import { Router } from "express";
-import {CreateCompany, updateCompany, deleteCompany, getCompany} from "../../../controllers/company/CRUD.controller.js";
+import {CreateCompany, updateCompany, deleteCompany, 
+    getCompany, getCompanyAll} from "../../../controllers/company/CRUD.controller.js";
 
 const companyRoutes = Router();
 
 companyRoutes.post("/create", CreateCompany);
 companyRoutes.post("/update/:id", updateCompany);
 companyRoutes.delete("/delete/:id", deleteCompany);
-companyRoutes.get("/get", getCompany);
+companyRoutes.get("/get/all", getCompanyAll);
+companyRoutes.get("/get/:id", getCompany);
+
 
 
 //rutas relacionadas a la creacion de partes asociadas a la empresa

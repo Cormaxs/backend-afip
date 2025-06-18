@@ -17,6 +17,10 @@ class EmpresaRepository{
     async findById(id) {
         return await Empresa.findById(id);
     }
+
+    async find_All() {
+        return await Empresa.find();
+    }
 }
 
 export default new EmpresaRepository(); 

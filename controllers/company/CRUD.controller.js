@@ -1,4 +1,4 @@
-import { register_company, update_company,delete_company, get_company } from "../../services/company_services.js";
+import { register_company, update_company,delete_company, get_company, get_company_all } from "../../services/company_services.js";
 
 // Crear una nueva empresa
 export async function CreateCompany(req, res) {
@@ -62,12 +62,26 @@ export async function deleteCompany(req, res) {
 
 export async function getCompany(req, res) {
     try{
-        const {id} = req.body;
+        const {id} = req.params;
         const result = await get_company(id);
         if(result){
             return res.status(200).json(result); // 200 OK para una consulta exitosa
         }
         return res.status(404).json({ result });
+    }catch(err){
+        console.error("Error al obtener la empresa:", err);
+        return res.status(500).json({ message: "Error interno del servidor al intentar obtener la empresa." });
+    }
+}
+
+export async function getCompanyAll(req, res) {
+    try{
+        const result = await get_company_all();
+      //  console.log("controllers -> ",result)
+        if(result){
+            return res.status(200).json(result); // 200 OK para una consulta exitosa
+        }
+        return res.status(404).json( result );
     }catch(err){
         console.error("Error al obtener la empresa:", err);
         return res.status(500).json({ message: "Error interno del servidor al intentar obtener la empresa." });
