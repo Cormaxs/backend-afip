@@ -14,7 +14,7 @@ const empresaSchema = new mongoose.Schema({
     cuit: {
         type: String,
         required: [true, 'El CUIT es obligatorio.'],
-        unique: true, // CUIT debe ser único para cada empresa
+        unique: false, // CUIT debe ser único para cada empresa
         trim: true,
         match: /^\d{2}-\d{8}-\d{1}$/
     },
