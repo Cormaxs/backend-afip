@@ -1,7 +1,9 @@
 import EmpresaRepository from "../repositories/repo_company.js";
 
 export async function register_company(datos) {
+    console.log("services",datos)
     const usuarioCreado = await EmpresaRepository.create(datos);
+    console.log("devuelto db", usuarioCreado)
     if (usuarioCreado) {
         return usuarioCreado;
     } else {
