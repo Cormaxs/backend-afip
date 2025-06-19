@@ -13,6 +13,7 @@ import MovimientoInventario from './inventory/MovimientoInventario.js';
 import Compra from './accounting/facturarecibida.js';
 import Proveedor from './accounting/proveedor.js';
 import Caja from './accounting/RegistroDeCaja.js';
+import Ticket from './sales/tikets-emitidos.js';
 
 export {
     Empresa,
@@ -25,5 +26,6 @@ export {
     MovimientoInventario,
     Compra,
     Proveedor,
-    Caja
+    Caja,
+    Ticket
 };
