@@ -1,4 +1,4 @@
-// create-tiket/create-sin-afip.js
+// services/facturas-sin-afip/f_sin_afip_crud_services.js
 import { createTicketSinAfip as generatePdfTicket } from './create-tiket/estructura-tiket.js';
 import fs from 'fs';
 import path from 'path';
@@ -13,15 +13,27 @@ import mongoose from 'mongoose';
  * @param {string} idEmpresa - El ID de la empresa emisora del ticket.
  * @returns {Promise<object>} Información del ticket guardado (ruta PDF, ID de DB, números generados).
  */
-export async function createSinAfip(datos, idUsuario, idEmpresa) {
+export async function createSinAfip(datos, idUsuario, idEmpresa, datosEmpresa) {
     // Validaciones iniciales
-    console.log("en services->", datos)
+    console.log("en services->", datos) // MIRA MUY BIEN ESTE LOG
+                                       // Asegúrate de que 'datos' TIENE la propiedad 'items' aquí.
+                                       // Si no la tiene, el problema es en la llamada desde el controlador.
+
     if (!idUsuario) {
         throw new Error('ID de usuario es requerido para guardar el PDF.');
     }
     if (!idEmpresa || !mongoose.Types.ObjectId.isValid(idEmpresa)) {
         throw new Error('ID de empresa válido es requerido.');
     }
+    
+    // --- NUEVA VALIDACIÓN CLAVE AQUÍ ---
+    if (!datos.items || !Array.isArray(datos.items) || datos.items.length === 0) {
+        // Loguea el objeto `datos` completo para depuración si la validación falla
+        console.error("Error de validación: 'items' no es un array válido o está vacío en los datos recibidos:", JSON.stringify(datos, null, 2));
+        throw new Error("Los ítems de la venta son requeridos y deben ser un array no vacío.");
+    }
+    // --- FIN DE LA NUEVA VALIDACIÓN ---
+
 
     // Configuración de rutas
     const projectRoot = path.resolve();
@@ -96,11 +108,13 @@ export async function createSinAfip(datos, idUsuario, idEmpresa) {
 
     // Preparar datos para el generador de PDF
     const updatedDatosForPdf = {
-        ...datos, 
+        ...datos, // Esto ya incluye 'items' si 'datos' original los tenía
         ventaId: nextVentaId, 
         numeroComprobante: nextNumeroComprobante 
     };
-    const pdfBuffer = await generatePdfTicket(updatedDatosForPdf);
+    // Aquí es donde se llama a `generatePdfTicket` (que es `createTicketSinAfip` de `estructura-tiket.js`)
+    // Si `updatedDatosForPdf.items` es undefined, el error ocurrirá en `estructura-tiket.js`.
+    const pdfBuffer = await generatePdfTicket(updatedDatosForPdf, datosEmpresa);
 
     // Definir nombre y ruta del archivo PDF
     const ticketFileName = `ticket_${nextVentaId}.pdf`;
@@ -121,7 +135,7 @@ export async function createSinAfip(datos, idUsuario, idEmpresa) {
         tipoComprobante: datos.tipoComprobante,
         numeroComprobante: nextNumeroComprobante,
 
-        items: datos.items,
+        items: datos.items, // Asegúrate de que los items se guarden también en la DB
         totales: datos.totales,
         pago: datos.pago,
         cliente: datos.cliente,

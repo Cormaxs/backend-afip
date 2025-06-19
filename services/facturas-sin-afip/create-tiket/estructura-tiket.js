@@ -1,62 +1,65 @@
 // ticketGenerator.js
+
 // Importar pdfmake y vfs_fonts para entorno Node.js (ES6 Modules)
 // Asegúrate de tener "type": "module" en tu package.json
 import pdfMake from 'pdfmake/build/pdfmake.js';
-import * as pdfFonts from 'pdfMake/build/vfs_fonts.js';
+import pdfFonts from 'pdfmake/build/vfs_fonts.js';
+
+// Asigna las fuentes virtuales a pdfMake. Esto es crucial para que pdfMake funcione en Node.js.
 pdfMake.vfs = pdfFonts.vfs;
 
 /**
- * Genera un objeto de definición para PDFMake con los datos de un ticket de kiosco.
+ * Genera un objeto de definición para PDFMake con los datos de un ticket de kiosco. 
  * @param {object} datos - Objeto con la información de la venta.
  * @returns {object} Definición del documento PDF para PDFMake.
  */
-function generarDefinicionTicket(datos) {
+function generarDefinicionTicket(datos, datosEmpresa) {
+    // Desestructuración de datos más concisa y con valores por defecto donde aplica.
     const {
         ventaId,
         fechaHora,
-        puntoDeVenta,
         tipoComprobante,
         numeroComprobante,
         items,
         totales,
         pago,
-        cliente, // Opcional
-        observaciones, // Opcional
-        cajero, // Nuevo: nombre del cajero
-        transaccionId, // Nuevo: ID de transacción interna
-        sucursal // Nuevo: nombre de sucursal
+        cliente,
+        observaciones,
+        cajero = 'N/A', // Valor por defecto si no se proporciona
+        transaccionId,
+        sucursal = 'Principal' // Valor por defecto si no se proporciona
     } = datos;
 
-    // Calcular el total de ítems
+    // Calcula el total de ítems una vez.
     const totalItemsCount = items.reduce((sum, item) => sum + item.cantidad, 0);
 
-    // --- Función auxiliar para una línea divisoria (ahora más profesional) ---
+    // Separador: función auxiliar para evitar repetición y mejorar la legibilidad.
+    // Se extrae fuera del `docDefinition` para mayor claridad.
     const getSeparator = (char = '-', length = 38) => ({
         text: char.repeat(length),
         alignment: 'center',
         fontSize: 6,
         color: '#BBBBBB',
-        margin: [0, 2, 0, 2] // Márgenes muy ajustados
+        margin: [0, 2, 0, 2]
     });
 
-    // Contenido de los ítems
+    // Construcción de las filas de la tabla de ítems de forma más directa.
+    // El encabezado es fijo, las filas se mapean.
     const itemsTableBody = [
-        // Encabezado de la tabla
         [{ text: 'CANT.', style: 'tableHeader', alignment: 'center' },
          { text: 'DESCRIPCIÓN', style: 'tableHeader' },
          { text: 'P. UNIT.', style: 'tableHeader', alignment: 'right' },
-         { text: 'TOTAL', style: 'tableHeader', alignment: 'right' }]
+         { text: 'TOTAL', style: 'tableHeader', alignment: 'right' }],
+        ...items.map(item => [
+            { text: item.cantidad.toString(), alignment: 'center', fontSize: 7 },
+            { text: item.descripcion.toUpperCase(), fontSize: 7 },
+            { text: `${item.precioUnitario.toFixed(2)}`, alignment: 'right', fontSize: 7 },
+            { text: `${item.totalItem.toFixed(2)}`, alignment: 'right', fontSize: 7 }
+        ])
     ];
 
-    // Filas de los ítems
-    items.forEach(item => {
-        itemsTableBody.push([
-            { text: item.cantidad.toString(), alignment: 'center', fontSize: 7 },
-            { text: item.descripcion.toUpperCase(), fontSize: 7 }, // Descripción en mayúsculas
-            { text: `${item.precioUnitario.toFixed(2)}`, alignment: 'right', fontSize: 7 }, // Sin "$" aquí, ya está en el total
-            { text: `${item.totalItem.toFixed(2)}`, alignment: 'right', fontSize: 7 }
-        ]);
-    });
+    // Separa fecha y hora solo una vez al principio para evitar repetirlo.
+    const [fecha, hora] = fechaHora.split(' ');
 
     const docDefinition = {
         pageSize: { width: 226.77, height: 'auto' }, // 80mm de ancho (226.77 puntos), altura automática
@@ -64,19 +67,19 @@ function generarDefinicionTicket(datos) {
 
         content: [
             // --- Encabezado del Comercio ---
-            { text: 'MI KIOSCO AMIGO S.A.', style: 'shopHeader', alignment: 'center', margin: [0, 0, 0, 2] },
-            { text: 'Av. Siempre Viva 742 - Catamarca, Argentina', alignment: 'center', fontSize: 7, color: '#444444' },
-            { text: 'CUIT: 20-12345678-9 | Ing. Brutos: 20-98765432-1', alignment: 'center', fontSize: 7, color: '#444444', margin: [0, 0, 0, 5] },
-            { text: `Sucursal: ${sucursal || 'Principal'}`, alignment: 'center', fontSize: 7, color: '#444444', margin: [0, 0, 0, 8] },
+            { text: `${datosEmpresa.nombreEmpresa}`, style: 'shopHeader', alignment: 'center', margin: [0, 0, 0, 2] },
+            { text: `DIRECCION : ${datosEmpresa.direccion}`, alignment: 'center', fontSize: 7, color: '#444444' },
+            { text: `CUIT : ${datosEmpresa.cuit}`, alignment: 'center', fontSize: 7, color: '#444444', margin: [0, 0, 0, 5] },
+            { text: `Sucursal: ${sucursal}`, alignment: 'center', fontSize: 7, color: '#444444', margin: [0, 0, 0, 8] },
 
+            getSeparator('='),
 
-            getSeparator('=') , // Separador robusto
-
-            // --- Detalles del Comprobante ---
+            // --- Detalles del Comprobante (uso de array para condicionales más limpios) ---
+            // Se agrupan los elementos comunes y se añaden condicionalmente si existen.
             {
                 columns: [
                     { text: 'TICKET:', bold: true, fontSize: 8.5 },
-                    { text: `${tipoComprobante.toUpperCase()}`, fontSize: 8.5, alignment: 'right' }
+                    { text: tipoComprobante.toUpperCase(), fontSize: 8.5, alignment: 'right' }
                 ],
                 margin: [0, 2, 0, 1]
             },
@@ -90,28 +93,28 @@ function generarDefinicionTicket(datos) {
             {
                 columns: [
                     { text: 'FECHA:', bold: true, fontSize: 7.5, color: '#555555' },
-                    { text: fechaHora.split(' ')[0], fontSize: 7.5, alignment: 'right', color: '#555555' } // Solo fecha
+                    { text: fecha, fontSize: 7.5, alignment: 'right', color: '#555555' }
                 ],
                 margin: [0, 0, 0, 1]
             },
             {
                 columns: [
                     { text: 'HORA:', bold: true, fontSize: 7.5, color: '#555555' },
-                    { text: fechaHora.split(' ')[1], fontSize: 7.5, alignment: 'right', color: '#555555' } // Solo hora
+                    { text: hora, fontSize: 7.5, alignment: 'right', color: '#555555' }
                 ],
                 margin: [0, 0, 0, 1]
             },
             {
                 columns: [
                     { text: 'CAJERO:', bold: true, fontSize: 7.5, color: '#555555' },
-                    { text: (cajero || 'N/A').toUpperCase(), fontSize: 7.5, alignment: 'right', color: '#555555' }
+                    { text: cajero.toUpperCase(), fontSize: 7.5, alignment: 'right', color: '#555555' }
                 ],
                 margin: [0, 0, 0, 1]
             },
             {
                 columns: [
                     { text: 'TRANS. ID:', bold: true, fontSize: 7.5, color: '#555555' },
-                    { text: (transaccionId || ventaId), fontSize: 7.5, alignment: 'right', color: '#555555' } // Usar ventaId si no hay transaccionId
+                    { text: transaccionId || ventaId, fontSize: 7.5, alignment: 'right', color: '#555555' }
                 ],
                 margin: [0, 0, 0, 8]
             },
@@ -125,13 +128,13 @@ function generarDefinicionTicket(datos) {
                     body: itemsTableBody
                 },
                 layout: {
-                    hLineWidth: function(i, node) { return (i === 0 || i === 1 || i === node.table.body.length) ? 0.8 : 0; },
-                    vLineWidth: function(i, node) { return 0; },
-                    hLineColor: function(i, node) { return '#BBBBBB'; },
-                    paddingLeft: function(i, node) { return 2; }, // Reducido el padding
-                    paddingRight: function(i, node) { return 2; },
-                    paddingTop: function(i, node) { return 3; },
-                    paddingBottom: function(i, node) { return 3; }
+                    hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? 0.8 : 0,
+                    vLineWidth: () => 0,
+                    hLineColor: () => '#BBBBBB',
+                    paddingLeft: () => 2,
+                    paddingRight: () => 2,
+                    paddingTop: () => 3,
+                    paddingBottom: () => 3
                 },
                 margin: [0, 5, 0, 5]
             },
@@ -149,14 +152,15 @@ function generarDefinicionTicket(datos) {
                 ],
                 margin: [0, 0, 0, 2]
             },
-            totales.descuento > 0 && {
+            // Se usa un spread operator (...) para incluir condicionalmente el objeto del descuento.
+            ...(totales.descuento > 0 ? [{
                 columns: [
                     { text: 'DESCUENTO:', alignment: 'right', bold: true, fontSize: 9.5, color: '#E53935' },
                     { text: `- $ ${totales.descuento.toFixed(2)}`, alignment: 'right', bold: true, fontSize: 9.5, color: '#E53935' }
                 ],
                 margin: [0, 0, 0, 2]
-            },
-            { canvas: [{ type: 'line', x1: 120, y1: 0, x2: 206.77, y2: 0, lineWidth: 0.7, lineColor: '#666666' }], margin: [0, 3, 0, 3] }, // Línea bajo el subtotal
+            }] : []),
+            { canvas: [{ type: 'line', x1: 120, y1: 0, x2: 206.77, y2: 0, lineWidth: 0.7, lineColor: '#666666' }], margin: [0, 3, 0, 3] },
             {
                 columns: [
                     { text: 'TOTAL A PAGAR', alignment: 'right', bold: true, fontSize: 14, color: '#000000' },
@@ -167,7 +171,7 @@ function generarDefinicionTicket(datos) {
 
             getSeparator('='),
 
-            // --- Información de Pago ---
+            // --- Información de Pago (uso de array para condicionales más limpios) ---
             {
                 columns: [
                     { text: 'MÉTODO DE PAGO:', bold: true, fontSize: 8.5 },
@@ -175,77 +179,79 @@ function generarDefinicionTicket(datos) {
                 ],
                 margin: [0, 0, 0, 2]
             },
-            pago.metodo === 'Efectivo' && pago.montoRecibido !== undefined && {
+            ...(pago.metodo === 'Efectivo' && pago.montoRecibido !== undefined ? [{
                 columns: [
                     { text: 'MONTO RECIBIDO:', bold: true, fontSize: 8.5 },
                     { text: `$ ${pago.montoRecibido.toFixed(2)}`, fontSize: 8.5, alignment: 'right' }
                 ],
                 margin: [0, 0, 0, 2]
-            },
-            pago.metodo === 'Efectivo' && pago.cambio !== undefined && {
+            }] : []),
+            ...(pago.metodo === 'Efectivo' && pago.cambio !== undefined ? [{
                 columns: [
                     { text: 'CAMBIO:', bold: true, fontSize: 8.5 },
                     { text: `$ ${pago.cambio.toFixed(2)}`, fontSize: 8.5, alignment: 'right' }
                 ],
                 margin: [0, 0, 0, 8]
-            },
+            }] : []),
 
-            cliente && getSeparator('-'),
-            // --- Información del Cliente (Opcional) ---
-            cliente && cliente.nombre && {
-                text: 'CLIENTE:',
-                fontSize: 8.5,
-                bold: true,
-                margin: [0, 5, 0, 2],
-                color: '#444444'
-            },
-            cliente && cliente.nombre && {
-                columns: [
-                    { text: 'Nombre:', fontSize: 7.5, color: '#555555' },
-                    { text: cliente.nombre.toUpperCase(), fontSize: 7.5, alignment: 'right', color: '#555555' }
-                ],
-                margin: [0, 0, 0, 1]
-            },
-            cliente && cliente.dniCuit && {
+            // --- Información del Cliente (Opcional - uso de array para condicionales más limpios) ---
+            // Se usa `cliente?.nombre` para encadenamiento opcional si `cliente` es nulo o indefinido.
+            ...(cliente?.nombre ? [
+                getSeparator('-'),
+                {
+                    text: 'CLIENTE:',
+                    fontSize: 8.5,
+                    bold: true,
+                    margin: [0, 5, 0, 2],
+                    color: '#444444'
+                },
+                {
+                    columns: [
+                        { text: 'Nombre:', fontSize: 7.5, color: '#555555' },
+                        { text: cliente.nombre.toUpperCase(), fontSize: 7.5, alignment: 'right', color: '#555555' }
+                    ],
+                    margin: [0, 0, 0, 1]
+                }
+            ] : []),
+            ...(cliente?.dniCuit ? [{
                 columns: [
                     { text: 'DNI/CUIT:', fontSize: 7.5, color: '#555555' },
                     { text: cliente.dniCuit, fontSize: 7.5, alignment: 'right', color: '#555555' }
                 ],
                 margin: [0, 0, 0, 1]
-            },
-            cliente && cliente.condicionIVA && {
+            }] : []),
+            ...(cliente?.condicionIVA ? [{
                 columns: [
                     { text: 'IVA:', fontSize: 7.5, color: '#555555' },
                     { text: cliente.condicionIVA.toUpperCase(), fontSize: 7.5, alignment: 'right', color: '#555555' }
                 ],
                 margin: [0, 0, 0, 5]
-            },
+            }] : []),
 
-            observaciones && getSeparator('-'),
-            // --- Observaciones (Opcional) ---
-            observaciones && {
-                text: 'OBSERVACIONES:',
-                fontSize: 8.5,
-                bold: true,
-                margin: [0, 5, 0, 2],
-                color: '#444444'
-            },
-            observaciones && {
-                text: observaciones,
-                fontSize: 7.5,
-                margin: [0, 0, 0, 10],
-                color: '#555555'
-            },
+            // --- Observaciones (Opcional - uso de array para condicionales más limpios) ---
+            ...(observaciones ? [
+                getSeparator('-'),
+                {
+                    text: 'OBSERVACIONES:',
+                    fontSize: 8.5,
+                    bold: true,
+                    margin: [0, 5, 0, 2],
+                    color: '#444444'
+                },
+                {
+                    text: observaciones,
+                    fontSize: 7.5,
+                    margin: [0, 0, 0, 10],
+                    color: '#555555'
+                }
+            ] : []),
 
             getSeparator('='),
 
             // --- Pie de Página Profesional ---
             { text: '¡GRACIAS POR SU COMPRA!', style: 'footerGracias', alignment: 'center', margin: [0, 5, 0, 2] },
-            { text: 'Visite nuestro sitio web para ofertas exclusivas.', alignment: 'center', fontSize: 7.5, color: '#555555', margin: [0, 0, 0, 2] },
             { text: 'Conserve este ticket para cambios o devoluciones.', alignment: 'center', fontSize: 7.5, color: '#555555', margin: [0, 0, 0, 5] },
-            { text: 'Horario de atención: 9:00 a 21:00 hs.', alignment: 'center', fontSize: 7, color: '#777777', margin: [0, 0, 0, 2] },
-            { text: 'Línea de atención al cliente: 0800-KIOSCO (5467)', alignment: 'center', fontSize: 7, color: '#777777', margin: [0, 0, 0, 5] },
-            { text: 'Cód. Verif. ' + ventaId.split('-')[1] + fechaHora.replace(/[^0-9]/g, ''), alignment: 'center', fontSize: 6, color: '#999999', margin: [0, 5, 0, 0] },
+            { text: 'Cód. Verif. ' + ventaId.split('-')[1] + fecha.replace(/[^0-9]/g, '') + hora.replace(/[^0-9]/g, ''), alignment: 'center', fontSize: 6, color: '#999999', margin: [0, 5, 0, 0] },
             
             // --- ATRIBUCIÓN FACSTOCK ---
             { text: 'Sistema de Facturación desarrollado por Facstock.com', alignment: 'center', fontSize: 6, color: '#888888', margin: [0, 5, 0, 0] }
@@ -260,8 +266,8 @@ function generarDefinicionTicket(datos) {
                 bold: true,
                 fontSize: 7.5,
                 color: 'black',
-                fillColor: '#DDDDDD', // Un gris un poco más oscuro para el encabezado de la tabla
-                alignment: 'left', // Alineación a la izquierda por defecto para coherencia
+                fillColor: '#DDDDDD',
+                alignment: 'left',
                 paddingBottom: 4
             },
             footerGracias: {
@@ -286,18 +292,30 @@ function generarDefinicionTicket(datos) {
  * @param {object} datos - Objeto con la información de la venta.
  * @returns {Promise<Buffer>} Una promesa que resuelve con el Buffer del PDF generado.
  */
-export async function createTicketSinAfip(datos) {
-    return new Promise((resolve, reject) => {
-        try {
-            const docDefinition = generarDefinicionTicket(datos);
-            const pdfDoc = pdfMake.createPdf(docDefinition);
+export async function createTicketSinAfip(datos, datosEmpresa) {
+    // Uso de async/await para Promesas: hace el código más legible y moderno.
+    // La conversión a Promesa explícita con 'new Promise' es necesaria
+    // porque `pdfDoc.getBuffer` usa un callback.
+    try {
+        
+        const docDefinition = generarDefinicionTicket(datos, datosEmpresa);
+        const pdfDoc = pdfMake.createPdf(docDefinition);
 
+        // Envuelve el callback en una Promesa para usar async/await si es necesario
+        // en funciones que llamen a createTicketSinAfip.
+        return new Promise((resolve, reject) => {
             pdfDoc.getBuffer((buffer) => {
-                resolve(buffer);
+                // Si el buffer es nulo o indefinido, esto podría indicar un problema.
+                if (buffer) {
+                    resolve(buffer);
+                } else {
+                    reject(new Error('No se pudo obtener el buffer del PDF.'));
+                }
             });
-        } catch (error) {
-            console.error('Error al generar el ticket PDF:', error);
-            reject(error);
-        }
-    });
+        });
+    } catch (error) {
+        // Mejor manejo de errores: loguear el stack trace para depuración en producción.
+        console.error('Error al generar el ticket PDF:', error.message, error.stack);
+        throw error; // Propaga el error para que pueda ser manejado por el llamador.
+    }
 }
