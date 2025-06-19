@@ -1,13 +1,11 @@
 // controllers/tuControlador.js (o donde esté tu función sinAfip)
 import { createSinAfip, getTiketsCompanyServices } from "../../../services/facturas-sin-afip/f_sin_afip_crud_services.js";
+import {get_company} from "../../../services/company_services.js";
 
 export async function sinAfip(req, res) {
     try {
         // Desestructuramos 'datos' y 'idEmpresa' del cuerpo de la solicitud
         const { datos, idEmpresa } = req.body;
-        
-        // Asumimos que 'id' viene de los parámetros de la URL
-        // Por ejemplo, si la ruta es /api/tickets/:idUsuario
         const { id } = req.params; 
         console.log("ingrearon -> ", datos, id, idEmpresa)
         // Validaciones de existencia de datos críticos
@@ -20,9 +18,9 @@ export async function sinAfip(req, res) {
         if (!datos) {
             return res.status(400).json({ message: "El objeto 'datos' de la venta es requerido en el cuerpo de la solicitud." });
         }
-        
+        const datosEmpresa = await get_company(idEmpresa);
         // Llamamos al servicio para crear el ticket, pasando todos los datos necesarios
-        const resultadoTicket = await createSinAfip(datos, id, idEmpresa); 
+        const resultadoTicket = await createSinAfip(datos, id, idEmpresa, datosEmpresa); 
 
         // Enviamos una respuesta exitosa con los detalles del ticket creado
         res.status(201).json(resultadoTicket);
