@@ -55,7 +55,7 @@ const ticketSchema = new mongoose.Schema({
     ventaId: { type: String, required: true, unique: true },
     fechaHora: { type: Date, required: true }, // Se espera Date. Aquí no pondría default: Date.now si el dato original ya lo trae.
     tipoComprobante: { type: String, required: true },
-    numeroComprobante: { type: String, required: true, unique: true }, // El número visible en el PDF
+    numeroComprobante: { type: String, required: true }, // El número visible en el PDF
 
     // CONTENIDO DEL TICKET
     items: [itemSchema],

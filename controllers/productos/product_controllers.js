@@ -1,6 +1,6 @@
 import { add_product_services, update_product_services, delete_product_services, 
     get_product_by_id_services, get_all_products_services, 
-    get_all_products_company_services } from '../../services/product_services.js'; // Asegúrate de importar todas las funciones de servicio necesarias
+    get_all_products_company_services, get_product_codBarra_services } from '../../services/product_services.js'; // Asegúrate de importar todas las funciones de servicio necesarias
 
 
 
@@ -137,5 +137,17 @@ export async function get_all_products_company_controllers(req, res) {
         console.error("Error en get_all_products_company (controlador):", error.message);
         // Puedes ser más específico en el error si 'error' tiene un código/mensaje de error más detallado
         return res.status(500).json({ error: "Error interno del servidor al obtener los productos de la empresa." });
+    }
+}
+
+
+export async function get_product_codBarra(req, res){
+    try{
+        const {codBarra} = req.body;
+        const {idEmpresa, puntoVenta} = req.params;
+        const encontrado = await get_product_codBarra_services(idEmpresa, puntoVenta, codBarra);
+        res.send(encontrado)
+    }catch(err){
+
     }
 }

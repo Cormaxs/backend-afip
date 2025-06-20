@@ -8,12 +8,23 @@ const ProductSchema = new mongoose.Schema({
         ref: 'Empresa', // ¡CAMBIO CLAVE AQUÍ! Referencia al modelo 'Empresa'
         required: [true, 'Cada producto debe pertenecer a una empresa.']
     },
+    puntoVenta: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'PuntoDeVenta', // ¡CAMBIO CLAVE AQUÍ! Referencia al modelo 'Empresa'
+        required: [true, 'Cada producto debe pertenecer a un punto de venta.']
+    },
     // Información básica del producto
     codigoInterno: { // Nuevo campo: Un SKU o código interno para el producto (único por empresa)
         type: String,
         trim: true,
         unique: false, // La unicidad será compuesta con 'owner'
         required: [true, 'El código interno del producto es obligatorio.']
+    },
+    codigoBarra: { // Nuevo campo: Un SKU o código interno para el producto (único por empresa)
+        type: Number,
+        trim: true,
+        unique: false, // La unicidad será compuesta con 'owner'
+        required: [false, 'El código interno del producto es obligatorio.']
     },
     producto: { // Nombre del producto/servicio
         type: String,

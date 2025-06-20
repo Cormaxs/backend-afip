@@ -2,22 +2,14 @@ import { createXML } from "../../services/afip/4/armarXML.js";//convierte a json
 import { create_Factura } from "../../services/facturas/ensamblar-pdf.js"; //crea la factura en pdf
 import {facEmitidasControllers} from "../../services/facturas/facturas-emitidas-controller.js"; //guarda la factura en la base de datos
 import {getNumComprobante} from "../../services/facturas/facturas_services.js";
+
 export async function facturaCompleta(req, res) {
     try {
-        const { id, afipRequestData, facturaData } = req.body; // Desestructuramos para mayor claridad
-        // 1. Validar datos de entrada mínimos
-        if (!id || !afipRequestData || !facturaData) {
-            return res.status(400).json({ 
-                message: "Faltan datos esenciales para procesar la factura.",
-                details: "Asegúrate de proporcionar 'id', 'afipRequestData' y 'facturaData'."
-            });
-        }
+        const { id, afipRequestData, facturaData, idEmpresa,puntoVenta } = req.body; // Desestructuramos para mayor claridad
         // 2. Comunicarse con AFIP para obtener el CAE
         // El `createXML` debería lanzar un error si algo falla en la comunicación o si AFIP no responde.
-        const empresa = "684b20ec17d809f55dd91864";
-        const puntoVenta = "684da1f02cca1783265e873f";
-        const numero = (await getNumComprobante(empresa, puntoVenta)+1);
-        console.log("factura emitida -> ", numero, typeof(numero))
+        const numero = (await getNumComprobante(idEmpresa, puntoVenta)+1);
+        //console.log("factura emitida -> ", numero, typeof(numero))
         const aprobarFactura = await createXML(afipRequestData, id, numero); 
 
         // 3. Verificar la respuesta de AFIP

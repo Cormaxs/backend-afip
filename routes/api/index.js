@@ -13,8 +13,8 @@ import cashRoutes from './v1/cash.routes.js';
 import afip_Router from './v1/credenciales-afip.routes.js';
 import facturas_Router from './v1/facturas-afip.routes.js';
 import point_salesRoutes from './v1/point-sales.routes.js';
-import facturas_sin_afip from "./v1/facturas-sin-afip.js"
-
+import facturas_sin_afip from "./v1/facturas-sin-afip.js";
+import archivos_routes from "./v1/archivos.routes.js";
 const routerV1 = Router();
 
 // Agrega todas las rutas con sus prefijos base
@@ -32,4 +32,5 @@ routerV1.use('/afip', afip_Router); //creado menos del basico
 routerV1.use('/facturas', facturas_Router); //creado menos del basico
 routerV1.use('/point-sales', point_salesRoutes); //creado menos del basico
 routerV1.use('/tikets', facturas_sin_afip); //creado menos del basico
+routerV1.use("/archivos", archivos_routes);//subir y bajar archivos
 export default routerV1;

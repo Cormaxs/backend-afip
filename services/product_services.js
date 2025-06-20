@@ -46,3 +46,8 @@ export async function get_all_products_company_services( company_id, page, limit
         console.log("encontrado -> ",products)
         return products;
 }
+
+export async function get_product_codBarra_services(idEmpresa, puntoVenta, codBarra){
+    console.log(`${idEmpresa} ${puntoVenta} ${codBarra}`)
+        return ProductRepository.findByBarcode(idEmpresa, puntoVenta, codBarra)
+}

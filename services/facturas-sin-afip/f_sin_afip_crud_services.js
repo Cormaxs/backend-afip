@@ -3,59 +3,41 @@ import { createTicketSinAfip as generatePdfTicket } from './create-tiket/estruct
 import fs from 'fs';
 import path from 'path';
 import TicketEmitidoRepository from "../../repositories/repo_tikets.js";
-import mongoose from 'mongoose';
 
-/**
- * Genera un ticket PDF sin integración con AFIP, lo guarda y registra la información en la base de datos.
- *
- * @param {object} datos - Objeto con la información de la venta para el ticket.
- * @param {string} idUsuario - El ID del usuario asociado a la ruta de guardado del PDF.
- * @param {string} idEmpresa - El ID de la empresa emisora del ticket.
- * @returns {Promise<object>} Información del ticket guardado (ruta PDF, ID de DB, números generados).
- */
 export async function createSinAfip(datos, idUsuario, idEmpresa, datosEmpresa) {
-    // Validaciones iniciales
-    console.log("en services->", datos) // MIRA MUY BIEN ESTE LOG
-                                       // Asegúrate de que 'datos' TIENE la propiedad 'items' aquí.
-                                       // Si no la tiene, el problema es en la llamada desde el controlador.
-
-    if (!idUsuario) {
-        throw new Error('ID de usuario es requerido para guardar el PDF.');
-    }
-    if (!idEmpresa || !mongoose.Types.ObjectId.isValid(idEmpresa)) {
-        throw new Error('ID de empresa válido es requerido.');
-    }
-    
-    // --- NUEVA VALIDACIÓN CLAVE AQUÍ ---
+    // Validación clave de los ítems de la venta
     if (!datos.items || !Array.isArray(datos.items) || datos.items.length === 0) {
-        // Loguea el objeto `datos` completo para depuración si la validación falla
         console.error("Error de validación: 'items' no es un array válido o está vacío en los datos recibidos:", JSON.stringify(datos, null, 2));
         throw new Error("Los ítems de la venta son requeridos y deben ser un array no vacío.");
     }
-    // --- FIN DE LA NUEVA VALIDACIÓN ---
 
-
-    // Configuración de rutas
+    // Configuración de rutas para guardar el PDF
     const projectRoot = path.resolve();
     const userTicketsDir = path.join(projectRoot, 'raiz-users', idUsuario, 'tickets');
 
     // Crear la carpeta si no existe
     await fs.promises.mkdir(userTicketsDir, { recursive: true });
 
-    // Parseo de fecha y hora
-    let parsedFechaHora;
-    if (datos.fechaHora) {
-        const [fechaStr, horaStr] = datos.fechaHora.split(' '); 
-        const [dia, mes, anio] = fechaStr.split('/'); 
-        const isoLikeDateString = `${anio}-${mes}-${dia}T${horaStr}`;
-        parsedFechaHora = new Date(isoLikeDateString);
+    // Helper para formatear números, usado para padStart
+    const padNumber = (num, length) => String(num).padStart(length, '0');
 
-        if (isNaN(parsedFechaHora.getTime())) {
+    // Parseo de fecha y hora
+    let parsedFechaHora = new Date(); // Valor por defecto: fecha y hora actuales
+    if (datos.fechaHora) {
+        const [fechaStr, horaStr] = datos.fechaHora.split(' ');
+        const [dia, mes, anio] = fechaStr.split('/');
+        const isoLikeDateString = `${anio}-${mes}-${dia}T${horaStr}`;
+        const tempDate = new Date(isoLikeDateString);
+
+        if (!isNaN(tempDate.getTime())) { // Si la fecha parseada es válida
+            parsedFechaHora = tempDate;
+        } else {
             console.warn(`Advertencia: La fecha "${datos.fechaHora}" resultó en "Invalid Date". Usando la fecha actual.`);
-            parsedFechaHora = new Date();
         }
     } else {
-        parsedFechaHora = new Date();
+        // Si datos.fechaHora no se proporciona, ya parsedFechaHora es new Date(),
+        // pero podemos emitir una advertencia si se espera una fecha.
+        console.warn("Advertencia: 'fechaHora' no proporcionada en los datos. Usando la fecha y hora actuales.");
     }
 
     const puntoDeVentaActual = datos.puntoDeVenta;
@@ -67,26 +49,36 @@ export async function createSinAfip(datos, idUsuario, idEmpresa, datosEmpresa) {
     );
     const nextComprobanteInterno = lastComprobanteInterno + 1;
 
-    // Generar ventaId (ej: VK20250618-0001)
+    // Generar ventaId (ej: VK20250618-PUNTO_DE_VENTA_ID-0001)
     const ticketDate = parsedFechaHora;
     const year = ticketDate.getFullYear();
-    const month = String(ticketDate.getMonth() + 1).padStart(2, '0');
-    const day = String(ticketDate.getDate()).padStart(2, '0');
+    const month = padNumber(ticketDate.getMonth() + 1, 2);
+    const day = padNumber(ticketDate.getDate(), 2);
     const formattedDateForVentaId = `${year}${month}${day}`;
 
     const lastVentaId = await TicketEmitidoRepository.findLastVentaId(idEmpresa, puntoDeVentaActual);
     let nextVentaIdConsecutive = 1;
+
+    // Si ya existe un ventaId anterior para esta empresa y punto de venta
     if (lastVentaId) {
         const parts = lastVentaId.split('-');
-        if (parts.length === 2) {
-            const lastDatePart = parts[0].substring(2);
-            if (lastDatePart === formattedDateForVentaId) {
-                nextVentaIdConsecutive = parseInt(parts[1], 10) + 1;
+        // El formato esperado ahora es VKYYYYMMDD-PUNTO_DE_VENTA_ID-####
+        // por lo tanto, esperamos 3 partes
+        if (parts.length === 3) {
+            const lastDatePart = parts[0].substring(2); // 'YYYYMMDD' de 'VKYYYYMMDD'
+            // Comprobamos si la fecha del último ventaId coincide con la fecha actual
+            // y si el punto de venta coincide (aunque el repo ya lo filtra, es una doble seguridad)
+            if (lastDatePart === formattedDateForVentaId && parts[1] === puntoDeVentaActual) {
+                nextVentaIdConsecutive = parseInt(parts[2], 10) + 1; // El consecutivo es la tercera parte
             }
         }
+        // Si el formato del lastVentaId no es el esperado, el consecutivo se reinicia a 1
+        // (esto es útil si cambias el formato o si hay datos antiguos)
     }
-    const formattedVentaIdConsecutive = String(nextVentaIdConsecutive).padStart(4, '0');
-    const nextVentaId = `VK${formattedDateForVentaId}-${formattedVentaIdConsecutive}`;
+
+    const formattedVentaIdConsecutive = padNumber(nextVentaIdConsecutive, 4);
+    // Nuevo formato para ventaId: VKYYYYMMDD-ID_PUNTO_DE_VENTA-CONSECUTIVO
+    const nextVentaId = `VK${formattedDateForVentaId}-${puntoDeVentaActual}-${formattedVentaIdConsecutive}`;
 
     // Generar numeroComprobante (ej: 0001-00001234)
     const lastNumeroComprobante = await TicketEmitidoRepository.findLastNumeroComprobante(
@@ -94,30 +86,30 @@ export async function createSinAfip(datos, idUsuario, idEmpresa, datosEmpresa) {
         puntoDeVentaActual
     );
     let nextComprobanteNumero = 1;
-    let serieComprobante = '0001'; 
+    let serieComprobante = '0001'; // Valor por defecto
 
     if (lastNumeroComprobante) {
         const parts = lastNumeroComprobante.split('-');
         if (parts.length === 2) {
-            serieComprobante = parts[0]; 
+            serieComprobante = parts[0];
             nextComprobanteNumero = parseInt(parts[1], 10) + 1;
         }
     }
-    const formattedComprobanteNumero = String(nextComprobanteNumero).padStart(8, '0');
+    const formattedComprobanteNumero = padNumber(nextComprobanteNumero, 8);
     const nextNumeroComprobante = `${serieComprobante}-${formattedComprobanteNumero}`;
 
     // Preparar datos para el generador de PDF
     const updatedDatosForPdf = {
         ...datos, // Esto ya incluye 'items' si 'datos' original los tenía
-        ventaId: nextVentaId, 
-        numeroComprobante: nextNumeroComprobante 
+        // Formatea parsedFechaHora a string para el PDF, ya que `estructura-tiket.js` lo espera así.
+        fechaHora: parsedFechaHora.toLocaleDateString('es-AR') + ' ' + parsedFechaHora.toLocaleTimeString('es-AR'),
+        ventaId: nextVentaId,
+        numeroComprobante: nextNumeroComprobante
     };
-    // Aquí es donde se llama a `generatePdfTicket` (que es `createTicketSinAfip` de `estructura-tiket.js`)
-    // Si `updatedDatosForPdf.items` es undefined, el error ocurrirá en `estructura-tiket.js`.
     const pdfBuffer = await generatePdfTicket(updatedDatosForPdf, datosEmpresa);
 
-    // Definir nombre y ruta del archivo PDF
-    const ticketFileName = `ticket_${nextVentaId}.pdf`;
+    // Definir nombre y ruta del archivo PDF incluyendo el punto de venta
+    const ticketFileName = `ticket_PDV-${puntoDeVentaActual}_${nextVentaId}.pdf`;
     const ticketFilePath = path.join(userTicketsDir, ticketFileName);
 
     // Guardar el PDF en el archivo
@@ -125,24 +117,17 @@ export async function createSinAfip(datos, idUsuario, idEmpresa, datosEmpresa) {
 
     // Preparar datos para el repositorio
     const ticketDataForDB = {
+        ...datos, // Propagamos todas las propiedades existentes de 'datos'
         idEmpresa: idEmpresa,
-        puntoDeVenta: puntoDeVentaActual,
+        puntoDeVenta: puntoDeVentaActual, // Aseguramos que esté presente
         numeroComprobanteInterno: nextComprobanteInterno,
         pdfPath: ticketFilePath,
-
         ventaId: nextVentaId,
-        fechaHora: parsedFechaHora, 
-        tipoComprobante: datos.tipoComprobante,
+        fechaHora: parsedFechaHora, // Se guarda como objeto Date en la DB
         numeroComprobante: nextNumeroComprobante,
-
-        items: datos.items, // Asegúrate de que los items se guarden también en la DB
-        totales: datos.totales,
-        pago: datos.pago,
-        cliente: datos.cliente,
-        observaciones: datos.observaciones,
-        cajero: datos.cajero,
-        transaccionId: datos.transaccionId,
-        sucursal: datos.sucursal,
+        // Los campos como 'items', 'totales', 'pago', 'cliente', etc., ya son parte de 'datos'
+        // y se incluyen automáticamente con el spread operator '...datos'.
+        // Solo sobrescribimos o añadimos aquí lo que es específico de este servicio.
     };
 
     // Guardar los datos del ticket en la base de datos
@@ -158,7 +143,6 @@ export async function createSinAfip(datos, idUsuario, idEmpresa, datosEmpresa) {
         numeroComprobante: nextNumeroComprobante
     };
 }
-
 
 export async function getTiketsCompanyServices(idEmpresa){
     return TicketEmitidoRepository.findByEmpresaId(idEmpresa);

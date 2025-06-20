@@ -1,18 +1,8 @@
-// ticketGenerator.js
-
-// Importar pdfmake y vfs_fonts para entorno Node.js (ES6 Modules)
-// Asegúrate de tener "type": "module" en tu package.json
 import pdfMake from 'pdfmake/build/pdfmake.js';
 import pdfFonts from 'pdfmake/build/vfs_fonts.js';
 
-// Asigna las fuentes virtuales a pdfMake. Esto es crucial para que pdfMake funcione en Node.js.
 pdfMake.vfs = pdfFonts.vfs;
 
-/**
- * Genera un objeto de definición para PDFMake con los datos de un ticket de kiosco. 
- * @param {object} datos - Objeto con la información de la venta.
- * @returns {object} Definición del documento PDF para PDFMake.
- */
 function generarDefinicionTicket(datos, datosEmpresa) {
     // Desestructuración de datos más concisa y con valores por defecto donde aplica.
     const {
@@ -26,7 +16,7 @@ function generarDefinicionTicket(datos, datosEmpresa) {
         cliente,
         observaciones,
         cajero = 'N/A', // Valor por defecto si no se proporciona
-        transaccionId,
+        transaccionId, // Se mantiene para referencia, pero no se usará en TRANS. ID si se prefiere ventaId
         sucursal = 'Principal' // Valor por defecto si no se proporciona
     } = datos;
 
@@ -63,7 +53,7 @@ function generarDefinicionTicket(datos, datosEmpresa) {
 
     const docDefinition = {
         pageSize: { width: 226.77, height: 'auto' }, // 80mm de ancho (226.77 puntos), altura automática
-        pageMargins: [ 8, 8, 8, 8 ], // Márgenes muy pequeños
+        pageMargins: [ 5, 8, 5, 8 ], // Márgenes laterales reducidos a 5 puntos
 
         content: [
             // --- Encabezado del Comercio ---
@@ -112,10 +102,12 @@ function generarDefinicionTicket(datos, datosEmpresa) {
                 margin: [0, 0, 0, 1]
             },
             {
+                // CAMBIO AQUÍ: Ajuste de alineación para TRANS. ID
                 columns: [
-                    { text: 'TRANS. ID:', bold: true, fontSize: 7.5, color: '#555555' },
-                    { text: transaccionId || ventaId, fontSize: 7.5, alignment: 'right', color: '#555555' }
+                    { text: 'TRANS. ID:', bold: true, fontSize: 7.5, color: '#555555', width: 'auto' }, // Ancho automático para la etiqueta
+                    { text: ventaId, fontSize: 7.5, alignment: 'right', color: '#555555', width: '*' } // El resto del espacio y alineación a la izquierda
                 ],
+                columnGap: 2, // Pequeño espacio entre la etiqueta y el valor
                 margin: [0, 0, 0, 8]
             },
 
@@ -251,8 +243,8 @@ function generarDefinicionTicket(datos, datosEmpresa) {
             // --- Pie de Página Profesional ---
             { text: '¡GRACIAS POR SU COMPRA!', style: 'footerGracias', alignment: 'center', margin: [0, 5, 0, 2] },
             { text: 'Conserve este ticket para cambios o devoluciones.', alignment: 'center', fontSize: 7.5, color: '#555555', margin: [0, 0, 0, 5] },
-            { text: 'Cód. Verif. ' + ventaId.split('-')[1] + fecha.replace(/[^0-9]/g, '') + hora.replace(/[^0-9]/g, ''), alignment: 'center', fontSize: 6, color: '#999999', margin: [0, 5, 0, 0] },
-            
+            { text: 'Cód. Verif. ' + ventaId, alignment: 'center', fontSize: 6, color: '#999999', margin: [0, 5, 0, 0] },
+
             // --- ATRIBUCIÓN FACSTOCK ---
             { text: 'Sistema de Facturación desarrollado por Facstock.com', alignment: 'center', fontSize: 6, color: '#888888', margin: [0, 5, 0, 0] }
         ],
@@ -285,19 +277,10 @@ function generarDefinicionTicket(datos, datosEmpresa) {
     return docDefinition;
 }
 
-/**
- * Función principal para crear un ticket PDF sin integración con AFIP.
- * Recibe los datos y devuelve una Promesa que resuelve con el Buffer del PDF.
- * NO GUARDA EL ARCHIVO, solo lo genera.
- * @param {object} datos - Objeto con la información de la venta.
- * @returns {Promise<Buffer>} Una promesa que resuelve con el Buffer del PDF generado.
- */
+
 export async function createTicketSinAfip(datos, datosEmpresa) {
-    // Uso de async/await para Promesas: hace el código más legible y moderno.
-    // La conversión a Promesa explícita con 'new Promise' es necesaria
-    // porque `pdfDoc.getBuffer` usa un callback.
     try {
-        
+
         const docDefinition = generarDefinicionTicket(datos, datosEmpresa);
         const pdfDoc = pdfMake.createPdf(docDefinition);
 

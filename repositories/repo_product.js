@@ -65,6 +65,23 @@ class ProductRepository {
     async deleteProduct(id) {
         return await Product.findByIdAndDelete(id);
     }
+
+
+    async findByBarcode(idEmpresa, puntoVenta, codBarra) {
+      console.log(`${idEmpresa} ${puntoVenta} ${codBarra}`)
+try{
+      const query = {
+          empresa: idEmpresa,
+          puntoVenta: puntoVenta,
+          codigoBarra: codBarra
+      };
+const resivido = await Product.findOne(query);
+console.log(resivido)
+      return resivido;
+    }catch(err){
+    console.error(err)
+    }
+  }
 }
 
 export default new ProductRepository();
