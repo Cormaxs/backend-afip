@@ -51,3 +51,17 @@ export async function get_product_codBarra_services(idEmpresa, puntoVenta, codBa
     console.log(`${idEmpresa} ${puntoVenta} ${codBarra}`)
         return ProductRepository.findByBarcode(idEmpresa, puntoVenta, codBarra)
 }
+
+
+export async function update_product_ventas_services(updateData) {
+   // console.log("services -> -> ",updateData)
+    const productsToUpdate = updateData.items.map(item => ({
+        id: item.idProduct,
+        cantidadARestar: item.cantidad
+      }));
+    const actualizado = await ProductRepository.updateProductVentas(productsToUpdate);
+    if (actualizado) {   
+        return actualizado;
+    }
+  return("No se pudo actualizar el producto. El producto no existe o no se realizaron cambios.");
+} 
