@@ -62,6 +62,60 @@ class ProductRepository {
         return await Product.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
     }
 
+    async updateProductVentas(productsToUpdate) {
+      try {
+        //console.log("Productos a actualizar:", productsToUpdate);
+    
+        const updatedProducts = [];
+        for (const productInfo of productsToUpdate) {
+          const { id, cantidadARestar } = productInfo;
+    
+         // console.log(`Intentando actualizar producto ID: ${id}, Cantidad a restar: ${cantidadARestar}`);
+    
+          // --- Validación de stock antes de actualizar ---
+          // Primero, obtenemos el producto para verificar su stock actual
+          const product = await Product.findById(id);
+    
+          if (!product) {
+            throw new Error(`Producto con ID ${id} no encontrado. No se pudo procesar la venta.`);
+          }
+    
+          // Calculamos el stock resultante
+          const stockResultante = product.stock_disponible - cantidadARestar;
+    
+          // Si el stock resultante es negativo, lanzamos un error
+          if (stockResultante < 0) {
+            throw new Error(
+              `No hay suficiente stock para el producto "${product.descripcion}" (ID: ${id}). ` +
+              `Stock actual: ${product.stock_disponible}. Cantidad solicitada: ${cantidadARestar}.`
+            );
+          }
+          // --- Fin de la validación de stock ---
+    
+          // Si el stock es suficiente, procedemos con la actualización
+          const updatedProduct = await Product.findByIdAndUpdate(
+            id,
+            {
+              $inc: { stock_disponible: -cantidadARestar } // Resta la cantidad al stock_disponible
+            },
+            { new: true, runValidators: true } // new: true devuelve el documento actualizado; runValidators: true ejecuta las validaciones del esquema
+          );
+    
+          // Aunque ya validamos antes, esta es una doble verificación si findByIdAndUpdate por alguna razón no retorna nada
+          if (!updatedProduct) {
+            throw new Error(`Producto con ID ${id} no se pudo actualizar después de la validación inicial.`);
+          }
+          updatedProducts.push(updatedProduct);
+        }
+    
+        return updatedProducts; // Devuelve un array con todos los productos actualizados
+    
+      } catch (error) {
+        console.error('Error al actualizar el producto(s) y restar stock:', error);
+        throw error; // Re-lanza el error para que sea manejado por el código que llama
+      }
+    }
+
     async deleteProduct(id) {
         return await Product.findByIdAndDelete(id);
     }
