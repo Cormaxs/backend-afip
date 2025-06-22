@@ -2,7 +2,7 @@
 import mongoose from 'mongoose';
 
 const cajaSchema = new mongoose.Schema({
-    owner: { // La empresa a la que pertenece esta caja
+    empresa: { // La empresa a la que pertenece esta caja
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Empresa',
         required: [true, 'La caja debe estar asociada a una empresa.']

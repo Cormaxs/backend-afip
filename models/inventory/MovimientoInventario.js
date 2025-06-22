@@ -2,7 +2,7 @@
 import mongoose from 'mongoose';
 
 const movimientoInventarioSchema = new mongoose.Schema({
-    owner: { // La empresa a la que pertenece el inventario
+    empresa: { // La empresa a la que pertenece el inventario
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Empresa',
         required: [true, 'El movimiento de inventario debe estar asociado a una empresa.']
