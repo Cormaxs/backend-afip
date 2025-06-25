@@ -19,10 +19,10 @@ const empresaSchema = new mongoose.Schema({
         match: /^\d{2}-\d{8}-\d{1}$/
     },
     iibb: { type: String, trim: true },
-    fechaInicioActividades: { type: Date, required: [true, 'La fecha de inicio de actividades es obligatoria.'] },
+    fechaInicioActividades: { type: Date, required: [false, 'La fecha de inicio de actividades es obligatoria.'] },
     condicionIVA: {
         type: String,
-        required: [true, 'La condición frente al IVA es obligatoria.'],
+        required: [false, 'La condición frente al IVA es obligatoria.'],
         enum: ['Responsable Inscripto', 'Monotributista', 'Exento', 'Consumidor Final', 'Responsable Monotributo', 'Sujeto Exento', 'No Responsable'],
         trim: true
     },
@@ -46,7 +46,7 @@ const empresaSchema = new mongoose.Schema({
     codigoPostal: { type: String, required: [true, 'El código postal es obligatorio.'], trim: true },
     direccion: { type: String, required: [true, 'La dirección es obligatoria.'], trim: true }, // Dirección fiscal
     zonaHoraria: { type: String, required: [true, 'La zona horaria es obligatoria.'], default: 'America/Argentina/Catamarca' },
-    monedaDefault: { type: String, required: [true, 'La moneda predeterminada es obligatoria.'], default: 'PES' },
+    monedaDefault: { type: String, required: [false, 'La moneda predeterminada es obligatoria.'], default: 'PES' },
     
     // Certificados AFIP (pueden ir aquí si son por empresa)
     certificadoDigital: { type: String, required: false }, // Ruta o referencia al archivo .crt
