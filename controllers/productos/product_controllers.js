@@ -143,8 +143,8 @@ export async function get_all_products_company_controllers(req, res) {
 
 export async function get_product_codBarra(req, res){
     try{
-        const {codBarra} = req.body;
-        const {idEmpresa, puntoVenta} = req.params;
+        const {idEmpresa, puntoVenta, codBarra} = req.params;
+        console.log("entrada -> ",req.body);
         const encontrado = await get_product_codBarra_services(idEmpresa, puntoVenta, codBarra);
         res.send(encontrado)
     }catch(err){

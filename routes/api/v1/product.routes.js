@@ -18,6 +18,6 @@ product_Router.get("/get", get_all_products);
 product_Router.get("/:id",get_all_products_company_controllers); //obtiene todos los productos de una empresa 
                                                                 //especifica solo o con filtros, nombre, categoria, etc
 
-product_Router.get("/get/codBarra/:idEmpresa/:puntoVenta", get_product_codBarra)
+product_Router.get("/get/:codBarra/:idEmpresa/:puntoVenta", get_product_codBarra)
 
 export default product_Router;
