@@ -29,7 +29,7 @@ export async function getPdfEmpresa(req, res) {
     }
 
     // Envía el archivo para descarga
-    res.download(filePath, (err) => {
+    res.sendFile(filePath, (err) => {
       if (err) {
         console.error('Error al descargar el archivo:', err);
         if (res.headersSent) {

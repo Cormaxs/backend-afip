@@ -5,7 +5,7 @@ export async function sinAfip(req, res) {
     try {
         const { datos, idEmpresa } = req.body;
         const { id } = req.params; 
-        //console.log(datos, id, idEmpresa)
+        console.log(datos, id, idEmpresa)
         const datosEmpresa = await get_company(idEmpresa);
         // Llamamos al servicio para crear el ticket, pasando todos los datos necesarios
         const resultadoTicket = await createSinAfip(datos, id, idEmpresa, datosEmpresa); 
