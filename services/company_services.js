@@ -44,7 +44,7 @@ export async function get_company(id) {
 
 export async function get_company_all() {
     const result = await EmpresaRepository.find_All();
-    //console.log("services -> ", result)
+    console.log("services -> ", result)
     if (result) {
         return result;
     }  return("No se pudo encontrar la empresa. Es posible que el ID no exista.");

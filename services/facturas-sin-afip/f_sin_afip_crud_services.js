@@ -135,6 +135,7 @@ export async function createSinAfip(datos, idUsuario, idEmpresa, datosEmpresa) {
     };
 }
 
-export async function getTiketsCompanyServices(idEmpresa){
-    return TicketEmitidoRepository.findByEmpresaId(idEmpresa);
+//busca los tickets en comprobantes
+export async function getTiketsCompanyServices(idEmpresa, options) {
+    return TicketEmitidoRepository.findByEmpresaId(idEmpresa, options);
 }

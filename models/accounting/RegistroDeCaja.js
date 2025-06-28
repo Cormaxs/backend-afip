@@ -76,6 +76,31 @@ const cajaSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+// --- Definición de Índices ---
 
+// Índice para búsquedas rápidas por empresa. Muy útil para `findByIdEmpresa`
+cajaSchema.index({ empresa: 1 });
+
+// Índice para búsquedas por punto de venta, a menudo usadas junto con la empresa
+cajaSchema.index({ puntoDeVenta: 1 });
+
+// Índice para búsquedas por vendedor
+cajaSchema.index({ vendedorAsignado: 1 });
+
+// Índice compuesto para buscar cajas abiertas/cerradas de una empresa
+// Útil si frecuentemente buscas el estado de las cajas de una empresa específica.
+cajaSchema.index({ empresa: 1, estado: 1 });
+
+// Índice para búsquedas por rangos de fechas de apertura
+cajaSchema.index({ fechaApertura: -1 }); // El -1 es para ordenar en orden descendente, común para fechas
+
+// Índice compuesto para buscar cajas de una empresa en un rango de fechas
+// Muy útil para reportes o historial de cajas.
+cajaSchema.index({ empresa: 1, fechaApertura: -1 });
+
+// Índice para transacciones dentro de una caja (para búsquedas por tipo o referencia)
+// Este índice es para el campo 'transacciones.referencia'
+cajaSchema.index({ 'transacciones.referencia': 1 });
+cajaSchema.index({ 'transacciones.tipo': 1 });
 const Caja = mongoose.model('Caja', cajaSchema);
 export default Caja;
