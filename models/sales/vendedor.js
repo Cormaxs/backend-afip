@@ -30,6 +30,7 @@ const vendedorSchema = new mongoose.Schema({
         ref: 'Empresa', // ¡CORRECCIÓN APLICADA! Referencia al modelo 'Empresa'
         required: [true, 'Cada vendedor debe estar asociado a una empresa propietaria.']
     },
+    
 
     // Información del rol del vendedor dentro de esa empresa
     rol: {

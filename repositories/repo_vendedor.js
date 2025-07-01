@@ -1,42 +1,42 @@
-import {Vendedor} from '../models/index.js';
+import {User} from '../models/index.js';
 
 
-class VendedorRepository {
+class UserRepository {
     // Busca un usuario por su nombre de usuario
     async findByUsername(username) {
-        return await Vendedor.findOne({ username });
+        return await User.findOne({ username });
     }
 
     // Crea un nuevo usuario en la base de datos
-    async create(VendedorData) {
-        const newVendedor = new Vendedor(VendedorData);
-        return await newVendedor.save();
+    async create(UserData) {
+        const newUser = new User(UserData); 
+        return await newUser.save();
     }
 
     // Busca un usuario por su ID
     async findById(id) {
-        return await Vendedor.findById(id);
+        return await User.findById(id);
     }
     
 
     // Actualiza un usuario
     async update(id, updateData) {
-        return await Vendedor.findByIdAndUpdate(id, updateData, { new: true });
+        return await User.findByIdAndUpdate(id, updateData, { new: true });
     }
 
     // Elimina un usuario
     async delete(id) {
-        return await Vendedor.findByIdAndDelete(id);
+        return await User.findByIdAndDelete(id);
     }
-    async deleteVendedorAndProducts(id) {
+    async deleteUserAndProducts(id) {
         // Aquí podrías implementar la lógica para eliminar un usuario y sus productos asociados
         // Por ejemplo, si tienes un modelo de Producto que tiene una referencia al usuario
-        // await Product.deleteMany({ VendedorId: id });
-        return await Vendedor.findByIdAndDelete(id);
+        // await Product.deleteMany({ UserId: id });
+        return await User.findByIdAndDelete(id);
     }
 
    
 }
 
 
-export default new VendedorRepository();
+export default new UserRepository();

@@ -32,10 +32,15 @@ const userSchema = new mongoose.Schema({
     rol: { // Rol del usuario dentro de la empresa
         type: String,
         // Roles más específicos para la administración de la empresa
-        enum: ['admin_principal', 'admin','gestor_contable', 'empleado_administrativo', 'solo_visualizacion'],
+        enum: ['admin_principal', 'admin','gestor_contable', 'empleado_administrativo', 'solo_visualizacion, vendedor_activo'],
         default: 'empleado_administrativo',
         required: [true, 'El rol del usuario es obligatorio.']
     },
+    puntosVentaAsignados: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'PuntoDeVenta' // Referencia al modelo de PuntoDeVenta
+        }],
     nombre: {
         type: String,
         trim: true
