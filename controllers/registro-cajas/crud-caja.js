@@ -15,7 +15,9 @@ console.log(req.body)
 
 export async function cerrarCaja(req, res){
     const {idCaja} = req.params;
-    console.log(req.body)
+    const {montoFinalReal} = req.body;  
+     const montoFinalRealNumber = parseFloat(montoFinalReal);
+     req.body.montoFinalReal = montoFinalRealNumber; // Aseguramos que sea un número
         try{
             const abierta = await cerrarCajaServices(idCaja ,req.body);
             res.send(abierta)

@@ -33,8 +33,8 @@ export async function register(req, res) {
       console.error(`Error en el controlador register para '${req.body.username || "desconocido"}':`, error.message);
       if (error.message.includes("El nombre de usuario ya está en uso.")) {
           return res.status(409).json({ error: error.message }); // 409 Conflict
-      } else if (error.message.includes("No se pudo completar el registro del usuario por un error interno.")) {
-          return res.status(500).json({ error: "Error interno del servidor al registrar el usuario. Inténtalo de nuevo más tarde." });
+      } else if (error.message) {
+          return res.status(409).json({ error: "El correo electronico ya esta en uso" });
       } else {
           return res.status(500).json({ error: "Error desconocido al registrar el usuario. Inténtalo de nuevo más tarde." });
       }
