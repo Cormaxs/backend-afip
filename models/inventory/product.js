@@ -113,7 +113,7 @@ const ProductSchema = new mongoose.Schema({
 // y 'owner' en el índice es realmente 'empresa' en el documento,
 // DEBES cambiar 'unique: true' a 'unique: false' y 'owner' a 'empresa' aquí.
 // De lo contrario, solo un producto con 'codigoInterno: 0' por empresa podrá ser insertado.
-ProductSchema.index({ codigoInterno: 1, owner: 1 }, { unique: true }); // Manteniendo tu versión, pero con la advertencia.
+ProductSchema.index({ codigoInterno: 1, empresa: 1 }, { unique: true }); // Manteniendo tu versión, pero con la advertencia.
 
 const Product = mongoose.model('Product', ProductSchema);
 export default Product;
