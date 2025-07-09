@@ -9,11 +9,12 @@ const empresaSchema = new mongoose.Schema({
     },
     razonSocial: { // Nuevo: A menudo diferente del nombre de fantasía
         type: String,
-        trim: true
+        trim: true,
+        required:[false, "la razon social no es obligatoria"]
     },
     cuit: {
         type: String,
-        required: [true, 'El CUIT es obligatorio.'],
+        required: [false, 'El CUIT no es obligatorio.'],
         unique: false, // CUIT debe ser único para cada empresa
         trim: true,
         match: /^\d{2}-\d{8}-\d{1}$/
@@ -22,7 +23,7 @@ const empresaSchema = new mongoose.Schema({
     fechaInicioActividades: { type: Date, required: [false, 'La fecha de inicio de actividades es obligatoria.'] },
     condicionIVA: {
         type: String,
-        required: [false, 'La condición frente al IVA es obligatoria.'],
+        required: [false, 'La condición frente al IVA no es obligatoria.'],
         enum: ['Responsable Inscripto', 'Monotributista', 'Exento', 'Consumidor Final', 'Responsable Monotributo', 'Sujeto Exento', 'No Responsable'],
         trim: true
     },
@@ -30,7 +31,8 @@ const empresaSchema = new mongoose.Schema({
     metodoContabilidad: {
         type: String,
         enum: ['Contado', 'Devengado'],
-        default: 'Contado'
+        default: 'Contado',
+        required: [false, 'El método de contabilidad no es obligatorio.']
     },
     mesInicioFiscal: { type: Number, min: 1, max: 12, default: 1 },
     telefonoContacto: { type: String, trim: true }, // Teléfono general de contacto

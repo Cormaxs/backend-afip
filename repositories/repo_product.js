@@ -59,11 +59,8 @@ class ProductRepository {
   } 
     //busca productos de empresa especifica
     async get_products_company(company_id, page = 1, limit = 10, category, producto, sortBy, order) {
-      if (!company_id) {
-        throw new Error("Se requiere un ID de empresa para obtener sus productos.");
-      }
-    
       // Ensure page and limit are numbers
+      console.log(page, limit)
       page = parseInt(page);
       limit = parseInt(limit);
     

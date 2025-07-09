@@ -42,8 +42,9 @@ export async function get_all_products_services(options = {}) {
 } 
 
 export async function get_all_products_company_services( company_id, page, limit, category, producto ){
+    //console.log("llegaron -> ", page, limit)
         const products = await ProductRepository.get_products_company( company_id, page, limit, category, producto );
-        console.log("encontrado -> ",products)
+        //console.log("encontrado -> ",products)
         return products;
 }
 
