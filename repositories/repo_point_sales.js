@@ -11,6 +11,8 @@ class PuntoDeVentaRepository {
 
     async findAll(empresaId, options = {}) {
         const { page = 1, limit = 10, sortBy, order } = options;
+        
+        console.log("parametros pasados -> ", page, limit)
         const query = { empresa: empresaId }; // Filtra por el ID de la empresa
     
         // 1. Obtener el total de Puntos de Venta que coinciden con la consulta

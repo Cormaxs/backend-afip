@@ -40,14 +40,12 @@ const ProductSchema = new mongoose.Schema({
     },
     marca: {
         type: String,
-        trim: true,
-        minlength: [2, 'La marca debe tener al menos 2 caracteres.']
+        trim: true
     },
     categoria: {
         type: String,
         required: [false, 'La categoría es obligatoria.'],
-        trim: true,
-        minlength: [2, 'La categoría debe tener al menos 2 caracteres.']
+        trim: true
     },
     unidadMedida: {
         type: String,

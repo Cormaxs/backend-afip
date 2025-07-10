@@ -1,6 +1,7 @@
 import { add_product_services, update_product_services, delete_product_services, 
     get_product_by_id_services, get_all_products_services, 
-    get_all_products_company_services, get_product_codBarra_services } from '../../services/product_services.js'; // Asegúrate de importar todas las funciones de servicio necesarias
+    get_all_products_company_services, get_product_codBarra_services,
+    delete_product_all_services } from '../../services/product_services.js'; // Asegúrate de importar todas las funciones de servicio necesarias
 
 
 
@@ -71,6 +72,29 @@ export async function delete_product(req, res) {
     }
 }
 
+export async function delete_product_all(req, res) {
+    try {
+        const { idEmpresa } = req.params;
+        if (!idEmpresa) {
+            return res.status(400).json({ error: "El ID de la empresa es requerido." });
+        }
+
+        // Llama al servicio para ejecutar la lógica
+        const resultado = await delete_product_all_services(idEmpresa);
+
+        // Envía una respuesta exitosa, informando cuántos productos se eliminaron.
+        // Incluso si se eliminaron 0, la operación fue exitosa.
+        return res.status(200).json({
+            message: `Operación completada. Se eliminaron ${resultado.deletedCount} productos.`,
+            deletedCount: resultado.deletedCount
+        });
+
+    } catch (error) {
+        console.error("Error en el controlador delete_product_all:", error.message);
+        // Error genérico para cualquier problema en la base de datos.
+        return res.status(500).json({ error: "No se pudieron eliminar los productos debido a un error interno." });
+    }
+}
 
 export async function get_product_by_id(req, res) {
     try {
@@ -111,21 +135,17 @@ export async function get_all_products(req, res) {
 
 export async function get_all_products_company_controllers(req, res) {
     try {
-        const { page, limit, category, producto } = req.query;
+        const { page, limit, category, product, marca } = req.query;
         // Cambiamos 'id' a 'company_id' para mayor claridad, asumiendo que tu ruta es algo como /products/company/:company_id
         const { id } = req.params; 
-        
-        // Validar que company_id esté presente
-        if (!id) {
-            return res.status(400).json({ error: "Falta el ID de la empresa." });
-        }
-        console.log(id, page , limit, category, producto)
+        console.log(id, page , limit, category, product, marca)
         const products = await get_all_products_company_services( 
             id, // Pasamos el ID de la empresa al servicio
             page, 
             limit, 
             category,
-            producto
+            product, 
+            marca
         );
 
         if (!products || products.length === 0) {

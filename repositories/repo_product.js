@@ -58,9 +58,9 @@ class ProductRepository {
       };
   } 
     //busca productos de empresa especifica
-    async get_products_company(company_id, page = 1, limit = 10, category, producto, sortBy, order) {
+    async get_products_company(company_id, page = 1, limit = 10, category, producto, marca, sortBy, order) {
       // Ensure page and limit are numbers
-      console.log(page, limit)
+      console.log(page, limit, "categoria -> ", category, marca)
       page = parseInt(page);
       limit = parseInt(limit);
     
@@ -75,14 +75,17 @@ class ProductRepository {
     
       // Add category filter if provided
       if (category) {
-        query.category = category;
+        query.categoria = category;
       }
     
       // Add product name search if provided (using a case-insensitive regex for flexibility)
       if (producto) {
         query.producto = { $regex: producto, $options: 'i' };
       }
-    
+
+    if(marca){
+      query.marca = { $regex: marca, $options: 'i' };
+    }
       try {
         // Get total count of products matching the query
         const totalProducts = await Product.countDocuments(query);
@@ -153,7 +156,7 @@ class ProductRepository {
           const stockResultante = product.stock_disponible - cantidadARestar;
     
           // Si el stock resultante es negativo, lanzamos un error
-          if (stockResultante < 0) {
+          if (stockResultante < -10) {
             throw new Error(
               `No hay suficiente stock para el producto "${product.descripcion}" (ID: ${id}). ` +
               `Stock actual: ${product.stock_disponible}. Cantidad solicitada: ${cantidadARestar}.`
@@ -189,6 +192,10 @@ class ProductRepository {
         return await Product.findByIdAndDelete(id);
     }
 
+    async deleteProductAll(idEmpresa) {
+      const resultado = await Product.deleteMany({ empresa: idEmpresa });
+      return resultado;
+  }
     //busca por codigo de barras
     async findByBarcode(idEmpresa, puntoVenta, codBarra) {
       console.log(`${idEmpresa} ${puntoVenta} ${codBarra}`)
