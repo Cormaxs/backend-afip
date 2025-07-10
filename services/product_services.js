@@ -24,6 +24,11 @@ export async function delete_product_services(id) {
   
 }
 
+export async function delete_product_all_services(idEmpresa) {
+    const resultado = await ProductRepository.deleteProductAll(idEmpresa);
+    return resultado;
+}
+
 export async function get_product_by_id_services(id) {
     
     const product = await ProductRepository.findById(id);
@@ -41,9 +46,10 @@ export async function get_all_products_services(options = {}) {
     return false;
 } 
 
-export async function get_all_products_company_services( company_id, page, limit, category, producto ){
+export async function get_all_products_company_services( company_id, page, limit, category, producto, marca ){
     //console.log("llegaron -> ", page, limit)
-        const products = await ProductRepository.get_products_company( company_id, page, limit, category, producto );
+    console.log("marca services -> ", marca)
+        const products = await ProductRepository.get_products_company( company_id, page, limit, category, producto, marca );
         //console.log("encontrado -> ",products)
         return products;
 }

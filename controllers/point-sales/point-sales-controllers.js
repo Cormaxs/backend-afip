@@ -16,7 +16,7 @@ export async function createPointSale(req, res) {
 export async function getPointSales(req, res){
     try{
         const {id} = req.params;
-        const puntos = await get_point_sales_services(id);
+        const puntos = await get_point_sales_services(id, req.query);
         if(puntos){
             return res.status(200).json(puntos);
         }res.status(400).json("error")
