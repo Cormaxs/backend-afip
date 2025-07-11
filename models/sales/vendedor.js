@@ -13,7 +13,7 @@ const vendedorSchema = new mongoose.Schema({
     password: { // Aquí guardaremos el hash de la contraseña del vendedor
         type: String,
         required: [true, 'La contraseña es obligatoria.'],
-        minlength: [6, 'La contraseña debe tener al menos 6 caracteres.']
+        minlength: [4, 'La contraseña debe tener al menos 4 caracteres.']
     },
     email: {
         type: String,

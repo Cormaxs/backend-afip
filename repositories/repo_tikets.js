@@ -113,55 +113,81 @@ class TicketEmitidoRepository {
     }
 
    //busca tickets por ID de empresa con paginación y ordenamiento
-    async findByEmpresaId(idEmpresa, options = {}) {
-        // Validar el ID de la empresa
-        if (!mongoose.Types.ObjectId.isValid(idEmpresa)) {
-            throw new Error('ID de empresa inválido para la búsqueda por empresa.');
-        }
+   async findByEmpresaId(idEmpresa, options = {}) {
+    // Validar el ID de la empresa
+    if (!mongoose.Types.ObjectId.isValid(idEmpresa)) {
+        throw new Error('ID de empresa inválido para la búsqueda por empresa.');
+    }
 
-        const { page = 1, limit = 10, sortBy, order } = options;
-        const query = { idEmpresa: idEmpresa }; // Filtra por el ID de la empresa
+    // 1. OBTENER OPCIONES Y EL NUEVO TÉRMINO DE BÚSQUEDA
+    const { page = 1, limit = 10, sortBy, order, search } = options;
+    
+    // 2. CONSTRUIR LA CONSULTA BASE
+    const query = { idEmpresa: idEmpresa };
 
-        // 1. Obtener el total de Tickets que coinciden con la consulta
-        const totalTickets = await Ticket.countDocuments(query);
+    // 3. AÑADIR LÓGICA DE BÚSQUEDA SI EXISTE EL PARÁMETRO 'search'
+    if (search) {
+        const searchConditions = [];
+        const searchRegex = { $regex: search, $options: 'i' };
 
-        let ticketsQuery = Ticket.find(query)
-            .skip((page - 1) * limit)
-            .limit(parseInt(limit));
-
-        // Opcional: Añadir lógica de ordenamiento si la necesitas
-        if (sortBy) {
-            const sortOrder = order === 'desc' ? -1 : 1;
-            ticketsQuery = ticketsQuery.sort({
-                [sortBy]: sortOrder
+        // Añadir condiciones para los campos de texto
+        searchConditions.push({ puntoDeVenta: searchRegex });
+        searchConditions.push({ ventaId: searchRegex });
+        searchConditions.push({ numeroComprobante: searchRegex });
+        searchConditions.push({ cajero: searchRegex }); // <-- NUEVA LÍNEA AÑADIDA
+        
+        // --- Búsqueda por fecha ---
+        const date = new Date(search);
+        if (!isNaN(date.getTime())) {
+            const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+            
+            searchConditions.push({
+                fechaHora: {
+                    $gte: startOfDay,
+                    $lte: endOfDay
+                }
             });
         }
-
-        const tickets = await ticketsQuery.exec();
-
-        // 2. Calcular la información de paginación
-        const totalPages = Math.ceil(totalTickets / limit);
-        const currentPage = parseInt(page);
-        const hasNextPage = currentPage < totalPages;
-        const hasPrevPage = currentPage > 1;
-        const nextPage = hasNextPage ? currentPage + 1 : null;
-        const prevPage = hasPrevPage ? currentPage - 1 : null;
-
-        // 3. Devolver los Tickets y la información de paginación
-        return {
-            tickets,
-            pagination: {
-                totalTickets,
-                totalPages,
-                currentPage,
-                limit: parseInt(limit),
-                hasNextPage,
-                hasPrevPage,
-                nextPage,
-                prevPage,
-            }
-        };
+        
+        query.$or = searchConditions;
     }
+
+    // 4. EJECUTAR CONSULTAS
+    const totalTickets = await Ticket.countDocuments(query);
+
+    let ticketsQuery = Ticket.find(query)
+        .sort({ fechaHora: -1 })
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit));
+
+    if (sortBy) {
+        const sortOrder = order === 'desc' ? -1 : 1;
+        ticketsQuery = ticketsQuery.sort({ [sortBy]: sortOrder });
+    }
+
+    const tickets = await ticketsQuery.exec();
+    
+    // 5. CALCULAR PAGINACIÓN Y DEVOLVER
+    const totalPages = Math.ceil(totalTickets / limit);
+    const currentPage = parseInt(page);
+    const hasNextPage = currentPage < totalPages;
+    const hasPrevPage = currentPage > 1;
+
+    return {
+        tickets,
+        pagination: {
+            totalTickets,
+            totalPages,
+            currentPage,
+            limit: parseInt(limit),
+            hasNextPage,
+            hasPrevPage,
+            nextPage: hasNextPage ? currentPage + 1 : null,
+            prevPage: hasPrevPage ? currentPage - 1 : null,
+        }
+    };
+}
 
 }
 

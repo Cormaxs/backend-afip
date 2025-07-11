@@ -10,6 +10,7 @@ class UserRepository {
     // Crea un nuevo usuario en la base de datos
     async create(UserData) {
         const newUser = new User(UserData); 
+        
         return await newUser.save();
     }
 

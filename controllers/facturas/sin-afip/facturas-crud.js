@@ -24,18 +24,18 @@ export async function sinAfip(req, res) {
 
 export async function getTiketsCompany(req, res) {
     try {
-        const { id } = req.params; // Captura el ID de la empresa de los parámetros de la URL
+        const { idEmpresa } = req.params; // Captura el ID de la empresa de los parámetros de la URL
         
         // **Clave aquí:** Combina req.params (para el ID) y req.query (para la paginación/ordenamiento)
         // Puedes pasar directamente req.query como las 'options' a tu servicio,
         // ya que Express parsea los query params como un objeto.
         const options = req.query; 
-
-        console.log("ID de Empresa (params): ", id);
+        
+        console.log("ID de Empresa (params): ", idEmpresa);
         console.log("Opciones de paginación (query): ", options);
 
-        // Llama al servicio, pasando el id de la empresa y las opciones combinadas
-        const result = await getTiketsCompanyServices(id, options); 
+        // Llama al servicio, pasando el idEmpresa de la empresa y las opciones combinadas
+        const result = await getTiketsCompanyServices(idEmpresa, options); 
         
         // Envía la respuesta con los tickets y la información de paginación
         res.status(200).json(result);

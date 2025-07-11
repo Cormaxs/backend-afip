@@ -7,6 +7,7 @@ export async function registerVendedor_services(datos) {
     console.log("Contraseña hasheada y lista para guardar.");
 
     const usuarioCreado = await VendedorRepository.create(datos);
+    console.log("usuario creado .-> ",usuarioCreado)
     if (usuarioCreado) {
         console.log(`Usuario '${usuarioCreado.username || datos.username}' registrado correctamente.`);
         return usuarioCreado;

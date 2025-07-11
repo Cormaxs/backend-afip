@@ -2,15 +2,35 @@ import { registerVendedor_services, loginVendedor_services, updateVendedor_servi
 
 export async function registerVendedor(req, res) {
     try {
-        console.log(req.body)
         const creado = await registerVendedor_services(req.body);
+        
+        // Esta parte se mantiene igual, solo se ejecuta si todo sale bien.
         if (creado) {
-            return res.status(201).json({ message: "Vendedor creado exitosamente", creado });
+            return res.status(201).json({ message: "Empleado creado exitosamente", creado });
         }
-        return res.status(400).json({ message: "Error al crear el vendedor" });
+
+        // Este return es redundante si el servicio lanza un error en caso de fallo.
+        // Se puede eliminar para simplificar.
+        // return res.status(400).json({ message: "Error al crear el vendedor" });
+
     } catch (err) {
-        console.error("Error al crear el vendedor:", err);
-        return res.status(500).json({ message: "Error interno del servidor" });
+        // --- AQUÍ ESTÁ LA LÓGICA MEJORADA ---
+
+        // 1. Verificamos si es un error de clave duplicada de MongoDB.
+        if (err.code === 11000) {
+            // 2. Extraemos el campo que causó el conflicto (ej. 'username' o 'email').
+            const campoDuplicado = Object.keys(err.keyValue)[0];
+            const valorDuplicado = err.keyValue[campoDuplicado];
+
+            const mensaje = `El ${campoDuplicado} '${valorDuplicado}' ya está en uso.`;
+            
+            // 3. Enviamos un error 409 (Conflict), que es más apropiado que 400 o 500.
+            return res.status(409).json({ message: mensaje });
+        }
+
+        // 4. Si es cualquier otro error, mantenemos el error 500 genérico.
+        console.error("Error no controlado al crear el vendedor:", err);
+        return res.status(500).json({ message: "Error interno del servidor. Por favor, contacte a soporte." });
     }
 }
 

@@ -1,7 +1,8 @@
 import { add_product_services, update_product_services, delete_product_services, 
     get_product_by_id_services, get_all_products_services, 
     get_all_products_company_services, get_product_codBarra_services,
-    delete_product_all_services } from '../../services/product_services.js'; // Asegúrate de importar todas las funciones de servicio necesarias
+    delete_product_all_services, get_all_category_company_services,
+    get_all_marca_company_services } from '../../services/product_services.js'; // Asegúrate de importar todas las funciones de servicio necesarias
 
 
 
@@ -135,17 +136,18 @@ export async function get_all_products(req, res) {
 
 export async function get_all_products_company_controllers(req, res) {
     try {
-        const { page, limit, category, product, marca } = req.query;
+        const { page, limit, category, product, marca, puntoVenta } = req.query;
         // Cambiamos 'id' a 'company_id' para mayor claridad, asumiendo que tu ruta es algo como /products/company/:company_id
         const { id } = req.params; 
-        console.log(id, page , limit, category, product, marca)
+        console.log(id, page , limit, category, product, marca, puntoVenta)
         const products = await get_all_products_company_services( 
             id, // Pasamos el ID de la empresa al servicio
             page, 
             limit, 
             category,
             product, 
-            marca
+            marca,
+            puntoVenta
         );
 
         if (!products || products.length === 0) {
@@ -153,6 +155,45 @@ export async function get_all_products_company_controllers(req, res) {
         }
 
         return res.status(200).json(products);
+    } catch (error) {
+        console.error("Error en get_all_products_company (controlador):", error.message);
+        // Puedes ser más específico en el error si 'error' tiene un código/mensaje de error más detallado
+        return res.status(500).json({ error: "Error interno del servidor al obtener los productos de la empresa." });
+    }
+}
+
+
+export async function get_all_category_company_controllers(req, res) {
+    try {
+        // Cambiamos 'id' a 'company_id' para mayor claridad, asumiendo que tu ruta es algo como /products/company/:company_id
+        const { idEmpresa } = req.params; 
+        const categorys = await get_all_category_company_services( idEmpresa);
+
+        if (!categorys || categorys.length === 0) {
+            return res.status(204).json({ message: "No hay categorias disponibles para esta empresa." });
+        }
+
+        return res.status(200).json(categorys);
+    } catch (error) {
+        console.error("Error en get_all_products_company (controlador):", error.message);
+        // Puedes ser más específico en el error si 'error' tiene un código/mensaje de error más detallado
+        return res.status(500).json({ error: "Error interno del servidor al obtener los productos de la empresa." });
+    }
+}
+
+
+
+export async function get_all_marca_company_controllers(req, res) {
+    try {
+        // Cambiamos 'id' a 'company_id' para mayor claridad, asumiendo que tu ruta es algo como /products/company/:company_id
+        const { idEmpresa } = req.params; 
+        const categorys = await get_all_marca_company_services( idEmpresa);
+
+        if (!categorys || categorys.length === 0) {
+            return res.status(204).json({ message: "No hay categorias disponibles para esta empresa." });
+        }
+
+        return res.status(200).json(categorys);
     } catch (error) {
         console.error("Error en get_all_products_company (controlador):", error.message);
         // Puedes ser más específico en el error si 'error' tiene un código/mensaje de error más detallado

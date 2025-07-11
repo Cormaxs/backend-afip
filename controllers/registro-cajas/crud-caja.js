@@ -66,7 +66,7 @@ export async function cerrarCaja(req, res){
         try {
             const { idEmpresa } = req.params; // ID de la caja a obtener
             const filtros = req.query;
-            console.log(idEmpresa)
+            
             const encontrada = await getCajasByIdEmpresa(idEmpresa, filtros);
             res.status(200).json(encontrada);
         } catch (err) {

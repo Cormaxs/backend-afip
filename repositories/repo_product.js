@@ -58,76 +58,88 @@ class ProductRepository {
       };
   } 
     //busca productos de empresa especifica
-    async get_products_company(company_id, page = 1, limit = 10, category, producto, marca, sortBy, order) {
-      // Ensure page and limit are numbers
-      console.log(page, limit, "categoria -> ", category, marca)
+    async get_products_company(company_id, page = 1, limit = 10, category, producto, marca, puntoVenta, sortBy, order) {
+      // --- (El código para validar page y limit no cambia) ---
+      //console.log("Filtros recibidos ->", { page, limit, category, producto, marca, puntoVenta });
       page = parseInt(page);
       limit = parseInt(limit);
-    
-      if (isNaN(page) || page < 1) {
-        page = 1;
-      }
-      if (isNaN(limit) || limit < 1) {
-        limit = 10;
-      }
-    
+  
+      if (isNaN(page) || page < 1) { page = 1; }
+      if (isNaN(limit) || limit < 1) { limit = 10; }
+  
       const query = { empresa: company_id };
-    
-      // Add category filter if provided
+  
+      // Filtros específicos
       if (category) {
-        query.categoria = category;
+          query.categoria = category;
       }
-    
-      // Add product name search if provided (using a case-insensitive regex for flexibility)
+      if (marca) {
+          // Se mantiene la búsqueda flexible para marca
+          query.marca = { $regex: marca, $options: 'i' };
+      }
+  
+      // ====================== INICIO DEL CAMBIO ======================
+      // NUEVO: Filtro por Punto de Venta
+      // Si se proporciona un puntoVenta (y no es un string vacío), se añade a la query.
+      if (puntoVenta) {
+          query.puntoVenta = puntoVenta;
+      }
+      // ======================= FIN DEL CAMBIO ========================
+  
+      // Búsqueda avanzada por palabras individuales en producto, marca y categoría
       if (producto) {
-        query.producto = { $regex: producto, $options: 'i' };
+          const searchWords = producto.trim().split(/\s+/);
+          
+          // Esta condición se combina con las anteriores (empresa, categoria, marca, puntoVenta)
+          query.$and = searchWords.map(word => ({
+              $or: [
+                  { producto: { $regex: word, $options: 'i' } },
+                  { marca: { $regex: word, $options: 'i' } },
+                  { categoria: { $regex: word, $options: 'i' } }
+              ]
+          }));
       }
-
-    if(marca){
-      query.marca = { $regex: marca, $options: 'i' };
-    }
+  
       try {
-        // Get total count of products matching the query
-        const totalProducts = await Product.countDocuments(query);
-    
-        let productsQuery = Product.find(query);
-    
-        // Apply sorting if sortBy is provided
-        if (sortBy) {
-          const sortOrder = order === 'desc' ? -1 : 1;
-          productsQuery = productsQuery.sort({ [sortBy]: sortOrder });
-        }
-    
-        // Apply pagination
-        const products = await productsQuery
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .exec();
-    
-        const totalPages = Math.ceil(totalProducts / limit);
-        const hasNextPage = page < totalPages;
-        const hasPrevPage = page > 1;
-        const nextPage = hasNextPage ? page + 1 : null;
-        const prevPage = hasPrevPage ? page - 1 : null;
-    
-        return {
-          products,
-          pagination: {
-            totalProducts,
-            currentPage: page,
-            totalPages,
-            limit,
-            hasNextPage,
-            hasPrevPage,
-            nextPage,
-            prevPage,
-          },
-        };
+          // --- (El resto de la lógica para contar, ordenar y paginar no necesita cambios) ---
+          
+          const totalProducts = await Product.countDocuments(query);
+          let productsQuery = Product.find(query);
+  
+          if (sortBy) {
+              const sortOrder = order === 'desc' ? -1 : 1;
+              productsQuery = productsQuery.sort({ [sortBy]: sortOrder });
+          }
+  
+          const products = await productsQuery
+              .skip((page - 1) * limit)
+              .limit(limit)
+              .exec();
+  
+          const totalPages = Math.ceil(totalProducts / limit);
+          const hasNextPage = page < totalPages;
+          const hasPrevPage = page > 1;
+          const nextPage = hasNextPage ? page + 1 : null;
+          const prevPage = hasPrevPage ? page - 1 : null;
+  
+          return {
+              products,
+              pagination: {
+                  totalProducts,
+                  currentPage: page,
+                  totalPages,
+                  limit,
+                  hasNextPage,
+                  hasPrevPage,
+                  nextPage,
+                  prevPage,
+              },
+          };
       } catch (error) {
-        console.error("Error al obtener productos de la empresa:", error);
-        throw new Error("No se pudieron obtener los productos de la empresa en este momento.");
+          console.error("Error al obtener productos de la empresa:", error);
+          throw new Error("No se pudieron obtener los productos de la empresa en este momento.");
       }
-    }
+  }
 
     // Actualiza un producto específico por ID
     async updateProduct(id, updateData) {
@@ -210,6 +222,46 @@ console.log(resivido)
       return resivido;
     }catch(err){
     console.error(err)
+    }
+  }
+
+
+  async  get_category_empresa(idEmpresa) {
+    // Valida que se haya proporcionado un idEmpresa
+    if (!idEmpresa) {
+      throw new Error("El ID de la empresa es requerido.");
+    }
+  
+    try {
+      // Utiliza el método distinct() para obtener las categorías únicas.
+      // 1er argumento: El campo del cual quieres los valores únicos ('categoria').
+      // 2do argumento: El filtro para los documentos ({ empresa: idEmpresa }).
+      const categories = await Product.distinct('categoria', { empresa: idEmpresa });
+      return categories;
+      
+    } catch (error) {
+      console.error("Error al obtener las categorías de la empresa:", error);
+      throw new Error("No se pudieron obtener las categorías en este momento.");
+    }
+  }
+
+
+  async  get_marca_empresa(idEmpresa) {
+    // Valida que se haya proporcionado un idEmpresa
+    if (!idEmpresa) {
+      throw new Error("El ID de la empresa es requerido.");
+    }
+  
+    try {
+      // Utiliza el método distinct() para obtener las categorías únicas.
+      // 1er argumento: El campo del cual quieres los valores únicos ('categoria').
+      // 2do argumento: El filtro para los documentos ({ empresa: idEmpresa }).
+      const categories = await Product.distinct('marca', { empresa: idEmpresa });
+      return categories;
+      
+    } catch (error) {
+      console.error("Error al obtener las categorías de la empresa:", error);
+      throw new Error("No se pudieron obtener las categorías en este momento.");
     }
   }
 

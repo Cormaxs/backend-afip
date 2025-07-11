@@ -1,4 +1,5 @@
 import {Caja} from "../models/index.js";
+import {User} from "../models/index.js";
 
 class CajaRepository{
 
@@ -7,50 +8,104 @@ class CajaRepository{
     }
 
     async findByIdEmpresa(empresaId, options = {}) {
-        const { page = 1, limit = 10, sortBy, order } = options;
-        const query = { empresa: empresaId }; // <-- ¡Clave aquí! Filtrar por el campo 'empresa'
-
+        // 1. Desestructurar opciones de paginación, orden y ahora también los filtros
+        const { 
+            page = 1, 
+            limit = 10, 
+            sortBy, 
+            order, 
+            puntoVenta, 
+            vendedor, 
+            fechaDesde, 
+            fechaHasta 
+        } = options;
+        
+        // 2. Construir la consulta base
+        const query = { empresa: empresaId };
+    
         try {
-            // 1. Obtener el total de cajas que coinciden con la consulta
-            const totalCajas = await Caja.countDocuments(query);
-
+            // 3. Añadir filtros a la consulta dinámicamente
+    
+            // --- Filtro por Vendedor (búsqueda por nombre) ---
+            if (vendedor) {
+                // Busca todos los IDs de usuarios cuyo nombre coincida parcialmente (insensible a mayúsculas)
+                const vendedorIds = await User.find({
+                    // Asumiendo que el campo se llama 'nombre' en tu modelo User
+                    nombre: new RegExp(vendedor, 'i') 
+                }).select('_id');
+                
+                // Si se encontraron vendedores, filtrar por sus IDs
+                if (vendedorIds.length > 0) {
+                    query.vendedorAsignado = { $in: vendedorIds.map(u => u._id) };
+                } else {
+                    // Si no se encuentra ningún vendedor con ese nombre, la consulta no debe devolver nada.
+                    return { cajas: [], pagination: { totalDocs: 0, totalPages: 0, currentPage: 1 } };
+                }
+            }
+    
+            // --- Filtro por Punto de Venta ---
+            if (puntoVenta) {
+                query.puntoDeVenta = puntoVenta;
+            }
+    
+            // --- Filtro por Rango de Fechas ---
+            const dateFilter = {};
+            if (fechaDesde) {
+                // $gte: greater than or equal (mayor o igual que)
+                dateFilter.$gte = new Date(fechaDesde);
+            }
+            if (fechaHasta) {
+                const endDate = new Date(fechaHasta);
+                // Aseguramos que se incluya todo el día de "fechaHasta"
+                endDate.setUTCHours(23, 59, 59, 999); 
+                // $lte: less than or equal (menor o igual que)
+                dateFilter.$lte = endDate;
+            }
+    
+            if (Object.keys(dateFilter).length > 0) {
+                query.fechaApertura = dateFilter;
+            }
+    
+            // 4. Ejecutar la consulta con paginación, orden y 'populate'
+    
+            // Contar el total de documentos que coinciden con la consulta final
+            const totalDocs = await Caja.countDocuments(query);
+            
             let cajasQuery = Caja.find(query)
+                .populate('puntoDeVenta', 'nombre') // <-- ¡IMPORTANTE! Trae el nombre del punto de venta
+                .populate('vendedorAsignado', 'nombre') // <-- ¡IMPORTANTE! Trae el nombre del vendedor
                 .skip((page - 1) * limit)
                 .limit(parseInt(limit));
-
-            // Aplicar ordenamiento si se especifica
+    
+            // Aplicar ordenamiento (por defecto, por fecha de apertura descendente)
+            const sortOptions = {};
             if (sortBy) {
-                const sortOrder = order === 'desc' ? -1 : 1;
-                cajasQuery = cajasQuery.sort({
-                    [sortBy]: sortOrder
-                });
+                sortOptions[sortBy] = order === 'desc' ? -1 : 1;
+            } else {
+                sortOptions['fechaApertura'] = -1; // Orden por defecto
             }
-
+            cajasQuery = cajasQuery.sort(sortOptions);
+    
             const cajas = await cajasQuery.exec();
-
-            // 2. Calcular la información de paginación
-            const totalPages = Math.ceil(totalCajas / limit);
+    
+            // 5. Calcular y devolver la paginación junto con los resultados
+            const totalPages = Math.ceil(totalDocs / limit);
             const currentPage = parseInt(page);
-            const hasNextPage = currentPage < totalPages;
-            const hasPrevPage = currentPage > 1;
-            const nextPage = hasNextPage ? currentPage + 1 : null;
-            const prevPage = hasPrevPage ? currentPage - 1 : null;
-
-            // 3. Devolver las cajas y la información de paginación
+    
             return {
                 cajas,
                 pagination: {
-                    totalCajas,
+                    totalDocs,
                     totalPages,
                     currentPage,
                     limit: parseInt(limit),
-                    hasNextPage,
-                    hasPrevPage,
-                    nextPage,
-                    prevPage,
+                    hasNextPage: currentPage < totalPages,
+                    hasPrevPage: currentPage > 1,
+                    nextPage: currentPage < totalPages ? currentPage + 1 : null,
+                    prevPage: currentPage > 1 ? currentPage - 1 : null,
                 }
             };
-
+    
         } catch (error) {
             console.error(`Error en CajaRepository.findByIdEmpresa (${empresaId}):`, error.message);
             throw new Error(`No se pudieron obtener las cajas por empresa: ${error.message}`);
@@ -59,7 +114,7 @@ class CajaRepository{
 
 
     async abrirCaja(datos){
-        const { empresa, puntoDeVenta, vendedorAsignado, montoInicial, fechaApertura } = datos;
+        const { empresa, puntoDeVenta, vendedorAsignado, montoInicial, fechaApertura, nombreCaja } = datos;
         try {
             // Crear una nueva instancia del modelo Caja
             const nuevaCaja = new Caja({
@@ -67,6 +122,7 @@ class CajaRepository{
                 puntoDeVenta,
                 vendedorAsignado,
                 montoInicial,
+                nombreCaja,
                 fechaApertura: fechaApertura || Date.now(), // Si no se proporciona, se usa la fecha actual
                 // fechaApertura se establecerá por defecto con Date.now() en el esquema
                 // estado se establecerá por defecto como 'Abierta' en el esquema
