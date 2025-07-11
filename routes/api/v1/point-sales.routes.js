@@ -5,6 +5,8 @@ const point_salesRoutes = Router();
 
 point_salesRoutes.post("/create",createPointSale );
 
-point_salesRoutes.get("/:id",getPointSales )
+point_salesRoutes.get("/:id",getPointSales );
+
+
 
 export default point_salesRoutes;

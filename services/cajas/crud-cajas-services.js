@@ -43,7 +43,7 @@ export async function getCajaById(cajaId) {
 
 export async function getCajasByIdEmpresa(cajaId, filtros) {
     try {
-        console.log(cajaId)
+       
         return await CajaRepository.findByIdEmpresa(cajaId, filtros);
     } catch (error) {
         console.error("Error en CajaService.getCajaById:", error.message);

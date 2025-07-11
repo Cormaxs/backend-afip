@@ -46,10 +46,24 @@ export async function get_all_products_services(options = {}) {
     return false;
 } 
 
-export async function get_all_products_company_services( company_id, page, limit, category, producto, marca ){
+export async function get_all_products_company_services( company_id, page, limit, category, producto, marca, puntoVenta ){
     //console.log("llegaron -> ", page, limit)
     console.log("marca services -> ", marca)
-        const products = await ProductRepository.get_products_company( company_id, page, limit, category, producto, marca );
+        const products = await ProductRepository.get_products_company( company_id, page, limit, category, producto, marca, puntoVenta );
+        //console.log("encontrado -> ",products)
+        return products;
+}
+
+export async function get_all_category_company_services( idEmpresa ){
+    //console.log("llegaron -> ", page, limit)
+        const products = await ProductRepository.get_category_empresa( idEmpresa );
+        //console.log("encontrado -> ",products)
+        return products;
+}
+
+export async function get_all_marca_company_services( idEmpresa ){
+    //console.log("llegaron -> ", page, limit)
+        const products = await ProductRepository.get_marca_empresa( idEmpresa );
         //console.log("encontrado -> ",products)
         return products;
 }

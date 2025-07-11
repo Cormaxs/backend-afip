@@ -9,6 +9,6 @@ registroCajas_routes.post("/cerrarcaja/:idCaja", cerrarCaja)
 
 registroCajas_routes.post('/:idCaja/transaccion', agregarTransaccionCajaController); // Para agregar un ingreso o egreso
 registroCajas_routes.get('/:idCaja', getCajaByIdController); // Opcional: para obtener el detalle de una caja
-registroCajas_routes.get('/empresa/:idEmpresa', getCajaByIdEmpresaController); // Opcional: para obtener el detalle de una caja
+registroCajas_routes.get('/empresa/:idEmpresa', getCajaByIdEmpresaController); // Opcional: para obtener el detalle de una caja agregarle filtro por punto de venta
 
 export default registroCajas_routes;

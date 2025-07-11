@@ -15,13 +15,18 @@ export async function createPointSale(req, res) {
 
 export async function getPointSales(req, res){
     try{
-        const {id} = req.params;
+        const { id } = req.params; // ID de la empresa
         const puntos = await get_point_sales_services(id, req.query);
+        
         if(puntos){
             return res.status(200).json(puntos);
-        }res.status(400).json("error")
-        
+        }
+        // Si no hay puntos, es mejor devolver un array vacío que un error
+        return res.status(200).json({ puntosDeVenta: [], pagination: {} });
+
     }catch(err){
-        console.error(err)
+        console.error("Error en getPointSales:", err);
+        // Siempre devuelve una respuesta en caso de error
+        res.status(500).json({ message: "Error interno del servidor", error: err.message });
     }
 }

@@ -7,3 +7,4 @@ export async function create_point_sales_services(data) {
 export async function get_point_sales_services(id, options) {
     return await PuntoDeVentaRepository.findAll(id, options);
 }
+

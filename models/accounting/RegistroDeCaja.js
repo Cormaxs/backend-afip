@@ -17,6 +17,7 @@ const cajaSchema = new mongoose.Schema({
         ref: 'Vendedor',
         required: [true, 'Un vendedor debe ser asignado a la caja.']
     },
+    nombreCaja: {type: String, trim: true}, // Nombre opcional para identificar la caja
     fechaApertura: {
         type: Date,
         required: [true, 'La fecha de apertura de caja es obligatoria.'],
