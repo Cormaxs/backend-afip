@@ -8,18 +8,19 @@ class CajaRepository{
     }
 
     async findByIdEmpresa(empresaId, options = {}) {
-        // 1. Desestructurar opciones de paginación, orden y ahora también los filtros
-        const { 
-            page = 1, 
-            limit = 10, 
-            sortBy, 
-            order, 
-            puntoVenta, 
-            vendedor, 
-            fechaDesde, 
-            fechaHasta 
+        // 1. Desestructurar opciones (se añade 'estado')
+        const {
+            page = 1,
+            limit = 10,
+            sortBy,
+            order,
+            puntoVenta,
+            vendedor,
+            fechaDesde,
+            fechaHasta,
+            estado // <-- AÑADIDO: puede ser 'abierta', 'cerrada' o undefined/null para 'todas'
         } = options;
-        
+    
         // 2. Construir la consulta base
         const query = { empresa: empresaId };
     
@@ -28,17 +29,13 @@ class CajaRepository{
     
             // --- Filtro por Vendedor (búsqueda por nombre) ---
             if (vendedor) {
-                // Busca todos los IDs de usuarios cuyo nombre coincida parcialmente (insensible a mayúsculas)
                 const vendedorIds = await User.find({
-                    // Asumiendo que el campo se llama 'nombre' en tu modelo User
-                    nombre: new RegExp(vendedor, 'i') 
+                    nombre: new RegExp(vendedor, 'i')
                 }).select('_id');
                 
-                // Si se encontraron vendedores, filtrar por sus IDs
                 if (vendedorIds.length > 0) {
                     query.vendedorAsignado = { $in: vendedorIds.map(u => u._id) };
                 } else {
-                    // Si no se encuentra ningún vendedor con ese nombre, la consulta no debe devolver nada.
                     return { cajas: [], pagination: { totalDocs: 0, totalPages: 0, currentPage: 1 } };
                 }
             }
@@ -48,17 +45,26 @@ class CajaRepository{
                 query.puntoDeVenta = puntoVenta;
             }
     
+            // --- Filtro por Estado (Abierta / Cerrada) ---  // <-- SECCIÓN AÑADIDA
+            if (estado) {
+                if (estado === 'abierta') {
+                    // Si la caja está abierta, 'fechaCierre' no debe existir.
+                    query.fechaCierre = { $exists: false };
+                } else if (estado === 'cerrada') {
+                    // Si la caja está cerrada, 'fechaCierre' debe existir.
+                    query.fechaCierre = { $exists: true };
+                }
+                // Si 'estado' es cualquier otro valor ('todas', etc.), no se aplica este filtro.
+            }
+    
             // --- Filtro por Rango de Fechas ---
             const dateFilter = {};
             if (fechaDesde) {
-                // $gte: greater than or equal (mayor o igual que)
                 dateFilter.$gte = new Date(fechaDesde);
             }
             if (fechaHasta) {
                 const endDate = new Date(fechaHasta);
-                // Aseguramos que se incluya todo el día de "fechaHasta"
-                endDate.setUTCHours(23, 59, 59, 999); 
-                // $lte: less than or equal (menor o igual que)
+                endDate.setUTCHours(23, 59, 59, 999);
                 dateFilter.$lte = endDate;
             }
     
@@ -67,22 +73,20 @@ class CajaRepository{
             }
     
             // 4. Ejecutar la consulta con paginación, orden y 'populate'
-    
-            // Contar el total de documentos que coinciden con la consulta final
             const totalDocs = await Caja.countDocuments(query);
             
             let cajasQuery = Caja.find(query)
-                .populate('puntoDeVenta', 'nombre') // <-- ¡IMPORTANTE! Trae el nombre del punto de venta
-                .populate('vendedorAsignado', 'nombre') // <-- ¡IMPORTANTE! Trae el nombre del vendedor
+                .populate('puntoDeVenta', 'nombre')
+                .populate('vendedorAsignado', 'nombre')
                 .skip((page - 1) * limit)
                 .limit(parseInt(limit));
     
-            // Aplicar ordenamiento (por defecto, por fecha de apertura descendente)
+            // Aplicar ordenamiento
             const sortOptions = {};
             if (sortBy) {
                 sortOptions[sortBy] = order === 'desc' ? -1 : 1;
             } else {
-                sortOptions['fechaApertura'] = -1; // Orden por defecto
+                sortOptions['fechaApertura'] = -1;
             }
             cajasQuery = cajasQuery.sort(sortOptions);
     
