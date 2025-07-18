@@ -2,7 +2,8 @@ import { add_product_services, update_product_services, delete_product_services,
     get_product_by_id_services, get_all_products_services, 
     get_all_products_company_services, get_product_codBarra_services,
     delete_product_all_services, get_all_category_company_services,
-    get_all_marca_company_services } from '../../services/product_services.js'; // Asegúrate de importar todas las funciones de servicio necesarias
+    get_all_marca_company_services, get_product_agotados_services,
+    get_total_inventario_services } from '../../services/product_services.js'; // Asegúrate de importar todas las funciones de servicio necesarias
 
 
 
@@ -167,7 +168,8 @@ export async function get_all_category_company_controllers(req, res) {
     try {
         // Cambiamos 'id' a 'company_id' para mayor claridad, asumiendo que tu ruta es algo como /products/company/:company_id
         const { idEmpresa } = req.params; 
-        const categorys = await get_all_category_company_services( idEmpresa);
+        console.log("desde categoria controlers : empresa -> ", idEmpresa,"puntoVenta categoria -> ", req.query.idPuntoVenta)
+        const categorys = await get_all_category_company_services( idEmpresa, req.query);
 
         if (!categorys || categorys.length === 0) {
             return res.status(204).json({ message: "No hay categorias disponibles para esta empresa." });
@@ -187,7 +189,8 @@ export async function get_all_marca_company_controllers(req, res) {
     try {
         // Cambiamos 'id' a 'company_id' para mayor claridad, asumiendo que tu ruta es algo como /products/company/:company_id
         const { idEmpresa } = req.params; 
-        const categorys = await get_all_marca_company_services( idEmpresa);
+        console.log("desde marca controlers : empresa -> ", idEmpresa,"puntoVenta marca -> ", req.query.idPuntoVenta)
+        const categorys = await get_all_marca_company_services( idEmpresa, req.query);
 
         if (!categorys || categorys.length === 0) {
             return res.status(204).json({ message: "No hay categorias disponibles para esta empresa." });
@@ -210,5 +213,30 @@ export async function get_product_codBarra(req, res){
         res.send(encontrado)
     }catch(err){
 
+    }
+}
+
+export async function get_product_agotados(req, res){
+    try{
+        const {idEmpresa, idPuntoVenta} = req.params;
+
+        const respuesta = await get_product_agotados_services(idEmpresa, idPuntoVenta, req.query)
+        res.send(respuesta)
+    }catch(err){
+        console.error("Error en get_product_agotados (controlador):", err.message);
+        return res.status(500).json({ error: "Error interno del servidor al obtener productos agotados." });
+    }
+}
+
+
+export async function get_totalInventario(req, res){
+    try{
+        const {idEmpresa, idPuntoVenta} = req.params;
+
+        const respuesta = await get_total_inventario_services(idEmpresa, idPuntoVenta)
+        res.send(respuesta)
+    }catch(err){
+        console.error("Error en get_product_agotados (controlador):", err.message);
+        return res.status(500).json({ error: "Error interno del servidor al obtener productos agotados." });
     }
 }

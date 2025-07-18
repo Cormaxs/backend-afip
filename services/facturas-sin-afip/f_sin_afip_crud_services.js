@@ -74,22 +74,31 @@ export async function createSinAfip(datos, idUsuario, idEmpresa, datosEmpresa) {
     const nextVentaId = `VK${formattedDateForVentaId}-${puntoDeVentaActual}-${formattedVentaIdConsecutive}`;
 
     // Generar numeroComprobante (ej: 0001-00001234)
+    const serieComprobante = datos.numeroComprobante; 
+
+    // EXPLICACIÓN: Buscamos el último comprobante que coincida no solo con la empresa y
+    // el punto de venta, sino también con la SERIE que mandó el frontend.
     const lastNumeroComprobante = await TicketEmitidoRepository.findLastNumeroComprobante(
         idEmpresa,
-        puntoDeVentaActual
+        puntoDeVentaActual,
+        serieComprobante // <-- Pasamos la serie del frontend al repositorio
     );
+    
     let nextComprobanteNumero = 1;
-    let serieComprobante = '0001'; // Valor por defecto
 
+    // Si encontramos un comprobante anterior CON ESTA MISMA SERIE...
     if (lastNumeroComprobante) {
         const parts = lastNumeroComprobante.split('-');
         if (parts.length === 2) {
-            serieComprobante = parts[0];
+            // ...calculamos el siguiente número secuencial. Ya no sobreescribimos la serie.
             nextComprobanteNumero = parseInt(parts[1], 10) + 1;
         }
     }
+
+    // Formateamos y construimos el número de comprobante final.
     const formattedComprobanteNumero = padNumber(nextComprobanteNumero, 8);
     const nextNumeroComprobante = `${serieComprobante}-${formattedComprobanteNumero}`;
+
 
     // Preparar datos para el generador de PDF
     const updatedDatosForPdf = {

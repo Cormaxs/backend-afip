@@ -32,7 +32,7 @@ export async function getTiketsCompany(req, res) {
         const options = req.query; 
         
         console.log("ID de Empresa (params): ", idEmpresa);
-        console.log("Opciones de paginación (query): ", options);
+        console.log("Opciones de paginación (query) puntoventa: ", options.puntoventa);
 
         // Llama al servicio, pasando el idEmpresa de la empresa y las opciones combinadas
         const result = await getTiketsCompanyServices(idEmpresa, options); 

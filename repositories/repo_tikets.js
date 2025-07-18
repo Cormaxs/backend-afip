@@ -119,13 +119,25 @@ class TicketEmitidoRepository {
         throw new Error('ID de empresa inválido para la búsqueda por empresa.');
     }
 
-    // 1. OBTENER OPCIONES Y EL NUEVO TÉRMINO DE BÚSQUEDA
-    const { page = 1, limit = 10, sortBy, order, search } = options;
+    // 1. OBTENER OPCIONES
+    const { page = 1, limit = 10, sortBy, order, search, puntoventa } = options;
     
-    // 2. CONSTRUIR LA CONSULTA BASE
-    const query = { idEmpresa: idEmpresa };
+    // ✅ 2. CONSTRUIR LA CONSULTA BASE CON `$and`
+    // Se inicia la consulta con el operador $and para combinar múltiples condiciones.
+    const query = {
+        $and: [
+            { idEmpresa: idEmpresa } // El filtro de empresa siempre es obligatorio
+        ]
+    };
 
-    // 3. AÑADIR LÓGICA DE BÚSQUEDA SI EXISTE EL PARÁMETRO 'search'
+    // ✅ 3. AÑADIR FILTRO OPCIONAL POR `puntoventa`
+    // Si se proporciona un `puntoventa` específico, se añade como una condición más.
+    if (puntoventa && mongoose.Types.ObjectId.isValid(puntoventa)) {
+        // Asumiendo que el campo en tu schema se llama `puntoDeVenta`
+        query.$and.push({ puntoDeVenta: puntoventa });
+    }
+
+    // 4. AÑADIR LÓGICA DE BÚSQUEDA GENERAL SI EXISTE `search`
     if (search) {
         const searchConditions = [];
         const searchRegex = { $regex: search, $options: 'i' };
@@ -134,7 +146,7 @@ class TicketEmitidoRepository {
         searchConditions.push({ puntoDeVenta: searchRegex });
         searchConditions.push({ ventaId: searchRegex });
         searchConditions.push({ numeroComprobante: searchRegex });
-        searchConditions.push({ cajero: searchRegex }); // <-- NUEVA LÍNEA AÑADIDA
+        searchConditions.push({ cajero: searchRegex });
         
         // --- Búsqueda por fecha ---
         const date = new Date(search);
@@ -150,10 +162,11 @@ class TicketEmitidoRepository {
             });
         }
         
-        query.$or = searchConditions;
+        // La condición $or se añade al array $and principal
+        query.$and.push({ $or: searchConditions });
     }
 
-    // 4. EJECUTAR CONSULTAS
+    // 5. EJECUTAR CONSULTAS (el resto del código no cambia)
     const totalTickets = await Ticket.countDocuments(query);
 
     let ticketsQuery = Ticket.find(query)
@@ -168,7 +181,7 @@ class TicketEmitidoRepository {
 
     const tickets = await ticketsQuery.exec();
     
-    // 5. CALCULAR PAGINACIÓN Y DEVOLVER
+    // 6. CALCULAR PAGINACIÓN Y DEVOLVER
     const totalPages = Math.ceil(totalTickets / limit);
     const currentPage = parseInt(page);
     const hasNextPage = currentPage < totalPages;

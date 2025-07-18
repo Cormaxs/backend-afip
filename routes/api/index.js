@@ -17,6 +17,7 @@ import facturas_sin_afip from "./v1/facturas-sin-afip.js";
 import archivos_routes from "./v1/archivos.routes.js";
 import registroCajas_routes from "./v1/registroCajas.routes.js";
 
+
 const routerV1 = Router();
 
 // Agrega todas las rutas con sus prefijos base
