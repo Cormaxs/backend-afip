@@ -1,4 +1,5 @@
-import { Product } from '../models/index.js'; 
+import { Product, Ticket } from '../models/index.js'; 
+import mongoose from 'mongoose';
 
 class ProductRepository {
   // Agrega un nuevo producto
@@ -226,45 +227,162 @@ console.log(resivido)
   }
 
 
-  async  get_category_empresa(idEmpresa) {
+  async   get_category_empresa(idEmpresa, idPuntoVenta) {
     // Valida que se haya proporcionado un idEmpresa
     if (!idEmpresa) {
-      throw new Error("El ID de la empresa es requerido.");
+        throw new Error("El ID de la empresa es requerido.");
     }
-  
+ 
     try {
-      // Utiliza el método distinct() para obtener las categorías únicas.
-      // 1er argumento: El campo del cual quieres los valores únicos ('categoria').
-      // 2do argumento: El filtro para los documentos ({ empresa: idEmpresa }).
-      const categories = await Product.distinct('categoria', { empresa: idEmpresa });
-      return categories;
-      
+        // 1. Se crea el filtro base con la condición obligatoria.
+        const filtro = { empresa: idEmpresa };
+
+        // 2. Si se proporciona un `idPuntoVenta`, se añade al filtro.
+        if (idPuntoVenta) {
+            filtro.puntoVenta = idPuntoVenta;
+        }
+
+        // 3. Se utiliza el filtro dinámico en la consulta.
+        const categories = await Product.distinct('categoria', filtro);
+        
+        return categories;
+        
     } catch (error) {
-      console.error("Error al obtener las categorías de la empresa:", error);
-      throw new Error("No se pudieron obtener las categorías en este momento.");
+        console.error("Error al obtener las categorías de la empresa:", error);
+        throw new Error("No se pudieron obtener las categorías en este momento.");
     }
-  }
+}
 
 
-  async  get_marca_empresa(idEmpresa) {
+  async  get_marca_empresa(idEmpresa, idPuntoVenta) {
     // Valida que se haya proporcionado un idEmpresa
     if (!idEmpresa) {
-      throw new Error("El ID de la empresa es requerido.");
+        throw new Error("El ID de la empresa es requerido.");
     }
-  
+ console.log("marca desde repositories ->",idPuntoVenta)
     try {
-      // Utiliza el método distinct() para obtener las categorías únicas.
-      // 1er argumento: El campo del cual quieres los valores únicos ('categoria').
-      // 2do argumento: El filtro para los documentos ({ empresa: idEmpresa }).
-      const categories = await Product.distinct('marca', { empresa: idEmpresa });
-      return categories;
-      
-    } catch (error) {
-      console.error("Error al obtener las categorías de la empresa:", error);
-      throw new Error("No se pudieron obtener las categorías en este momento.");
-    }
-  }
+        // 1. Se crea el filtro base con la condición obligatoria.
+        const filtro = { empresa: idEmpresa };
 
+        // 2. Si se proporciona un `idPuntoVenta`, se añade al filtro.
+        if (idPuntoVenta) {
+            filtro.puntoVenta = idPuntoVenta;
+        }
+
+        // 3. Se utiliza el filtro dinámico y se corrige el campo a 'marca'.
+        const marcas = await Product.distinct('marca', filtro);
+        
+        return marcas;
+        
+    } catch (error) {
+        // Se corrige el mensaje de error para que sea específico de "marcas".
+        console.error("Error al obtener las marcas de la empresa:", error);
+        throw new Error("No se pudieron obtener las marcas en este momento.");
+    }
+}
+
+  async getProductAgotados(idEmpresa, puntoDeVenta, page = 1, limit = 10) {
+    try {
+        // 1. --- VALIDACIÓN Y PREPARACIÓN ---
+        if (!mongoose.Types.ObjectId.isValid(idEmpresa)) {
+            throw new Error('ID de empresa inválido.');
+        }
+
+        // Se crea el filtro base, que siempre se aplicará.
+        const filtro = {
+            empresa: new mongoose.Types.ObjectId(idEmpresa),
+            stock_disponible: { $lte: 0 } 
+        };
+
+        // ✅ LÓGICA CORREGIDA:
+        // Si se proporciona un `puntoDeVenta` y es válido,
+        // se AÑADE al objeto de filtro. Si no, simplemente se ignora.
+        if (puntoDeVenta && mongoose.Types.ObjectId.isValid(puntoDeVenta)) {
+            filtro.puntoVenta = new mongoose.Types.ObjectId(puntoDeVenta);
+        }
+
+        // 2. --- EJECUCIÓN DE CONSULTAS PARA PAGINACIÓN ---
+        const [totalDocs, docs] = await Promise.all([
+            Product.countDocuments(filtro),
+            Product.find(filtro)
+                .sort({ stock_disponible: 1, producto: 1 })
+                .limit(Number(limit))
+                .skip((Number(page) - 1) * Number(limit))
+                .lean()
+        ]);
+        
+        const totalPages = Math.ceil(totalDocs / limit);
+
+        // 3. --- CONSOLIDACIÓN Y RETORNO DE RESULTADOS ---
+        return {
+            docs,
+            totalDocs,
+            limit: Number(limit),
+            totalPages,
+            page: Number(page),
+            hasNextPage: Number(page) < totalPages,
+            hasPrevPage: Number(page) > 1,
+        };
+
+    } catch (error) {
+        console.error("Error en MetricasRepository.getProductAgotados:", error);
+        throw error;
+    }
+}
+
+
+async priceInventario(idEmpresa, puntoDeVenta) {
+  try {
+      // 1. --- VALIDACIÓN ---
+      if (!mongoose.Types.ObjectId.isValid(idEmpresa)) {
+          throw new Error('ID de empresa inválido.');
+      }
+
+      // Se crea el filtro base para la etapa $match.
+      // Siempre se filtrará por empresa y por stock positivo.
+      const matchFilter = {
+          empresa: new mongoose.Types.ObjectId(idEmpresa),
+          stock_disponible: { $gt: 0 }
+      };
+
+      // ✅ LÓGICA CORREGIDA:
+      // Si se proporciona un `puntoDeVenta` y es válido,
+      // se AÑADE al objeto de filtro. Si no, se ignora.
+      if (puntoDeVenta && mongoose.Types.ObjectId.isValid(puntoDeVenta)) {
+          matchFilter.puntoVenta = new mongoose.Types.ObjectId(puntoDeVenta);
+      }
+
+      // 2. --- AGREGACIÓN EN LA BASE DE DATOS ---
+      const resultadoAgregacion = await Product.aggregate([
+          // --- Etapa 1: Filtrar ($match) ---
+          // Se utiliza el objeto de filtro dinámico que acabamos de construir.
+          {
+              $match: matchFilter
+          },
+          // --- Etapa 2: Agrupar y Calcular ($group) ---
+          // Esta etapa no cambia, siempre suma los documentos que pasaron el filtro.
+          {
+              $group: {
+                  _id: null,
+                  valorTotal: {
+                      $sum: { $multiply: ["$stock_disponible", "$precioCosto"] }
+                  }
+              }
+          }
+      ]);
+      
+      // 3. --- PROCESAR Y RETORNAR EL RESULTADO ---
+      const valorTotalInventario = resultadoAgregacion.length > 0 ? resultadoAgregacion[0].valorTotal : 0;
+
+      return {
+          valorTotalInventario: valorTotalInventario
+      };
+
+  } catch (error) {
+      console.error("Error en MetricasRepository.priceInventario:", error);
+      throw error;
+  }
+}
 }
 
 export default new ProductRepository();

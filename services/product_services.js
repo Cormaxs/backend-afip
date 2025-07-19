@@ -54,16 +54,18 @@ export async function get_all_products_company_services( company_id, page, limit
         return products;
 }
 
-export async function get_all_category_company_services( idEmpresa ){
+export async function get_all_category_company_services( idEmpresa, query ){
     //console.log("llegaron -> ", page, limit)
-        const products = await ProductRepository.get_category_empresa( idEmpresa );
+    const {idPuntoVenta} = query;
+        const products = await ProductRepository.get_category_empresa( idEmpresa, idPuntoVenta );
         //console.log("encontrado -> ",products)
         return products;
 }
 
-export async function get_all_marca_company_services( idEmpresa ){
-    //console.log("llegaron -> ", page, limit)
-        const products = await ProductRepository.get_marca_empresa( idEmpresa );
+export async function get_all_marca_company_services( idEmpresa, query ){
+    console.log("llegaron -> ", idEmpresa, query.idPuntoVenta);
+    const {idPuntoVenta} = query;
+        const products = await ProductRepository.get_marca_empresa( idEmpresa, idPuntoVenta );
         //console.log("encontrado -> ",products)
         return products;
 }
@@ -86,3 +88,15 @@ export async function update_product_ventas_services(updateData) {
     }
   return("No se pudo actualizar el producto. El producto no existe o no se realizaron cambios.");
 } 
+
+export async function get_product_agotados_services(idEmpresa, idPuntoVenta, paginacion) {
+    const {page, limit} = paginacion;
+    const agotados = await ProductRepository.getProductAgotados(idEmpresa, idPuntoVenta, page, limit);
+  return agotados;
+}
+
+
+export async function get_total_inventario_services(idEmpresa, idPuntoVenta) {
+    const agotados = await ProductRepository.priceInventario(idEmpresa, idPuntoVenta);
+  return agotados;
+}
