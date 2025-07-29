@@ -35,6 +35,7 @@ export async function update_product(req, res) {
         const productId = req.params.id;
         const updateData = req.body; 
 
+        console.log(updateData)
         const updatedProduct = await update_product_services(productId, updateData);
         if (!updatedProduct) {
             return res.status(404).json({ error: "Producto no encontrado para actualizar." });
@@ -57,7 +58,7 @@ export async function update_product(req, res) {
 
 export async function delete_product(req, res) {
     try {
-        const productId = req.params.id;
+        const productId = req.params.productId;
         const deletedProduct = await delete_product_services(productId);
         if (!deletedProduct) {
             return res.status(404).json({ error: "Producto no encontrado para eliminar." }); // 404 Not Found

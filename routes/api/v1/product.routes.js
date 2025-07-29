@@ -11,7 +11,7 @@ product_Router.post("/add",add_product);
 
 product_Router.post("/update/:id", update_product);
 
-product_Router.delete("/delete/:id",delete_product);
+product_Router.delete("/delete/:productId",delete_product);
 product_Router.delete("/delete/all/:idEmpresa",delete_product_all);
 
 product_Router.get("/get/:id",get_product_by_id);//producto especifico
