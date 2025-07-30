@@ -5,7 +5,7 @@ import {CreateCompany, updateCompany, deleteCompany,
 const companyRoutes = Router();
 
 companyRoutes.post("/create", CreateCompany);
-companyRoutes.post("/update/:id", updateCompany);
+companyRoutes.post("/update/:idEmpresa", updateCompany);
 companyRoutes.delete("/delete/:id", deleteCompany);
 companyRoutes.get("/get/all", getCompanyAll);
 companyRoutes.get("/get/:id", getCompany);

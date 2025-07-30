@@ -34,6 +34,7 @@ export async function registerUser_services(datos) {
 
 export async function updateUser_services(id, datos) { // Cambiado para recibir 'id' directamente
     if (!id) {
+        
         console.error("Error en updateUser_services: ID de usuario no proporcionado para la actualización.");
         throw new Error("ID de usuario es requerido para la actualización.");
     }

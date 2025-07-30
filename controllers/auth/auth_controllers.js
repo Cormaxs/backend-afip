@@ -43,15 +43,16 @@ export async function register(req, res) {
 
 export async function update(req, res) {
   try {
-      const id = req.params.id; 
+      const idUser = req.params.idUser; 
       const datos = req.body;
-      const actualizados = await updateUser_services(id, datos);
+      console.log(`Actualizando usuario con ID: ${idUser} datos -> ${datos.password}`);
+      const actualizados = await updateUser_services(idUser, datos);
       if (!actualizados) {
           return res.status(404).json({ error: "Usuario no encontrado para actualizar." });
       }
       return res.status(200).json({ message: "Usuario actualizado correctamente.", user: actualizados });
   } catch (error) {
-      console.error(`Error en el controlador update para ID ${req.params.id || 'desconocido'}:`, error.message);
+      console.error(`Error en el controlador update para idUser ${req.params.idUser || 'desconocido'}:`, error.message);
       if (error.message.includes("ID de usuario es requerido")) {
           return res.status(400).json({ error: error.message });
       } else if (error.message.includes("No se pudo actualizar el usuario. El usuario no existe o no se realizaron cambios.")) {

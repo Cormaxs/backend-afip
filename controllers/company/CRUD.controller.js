@@ -25,13 +25,11 @@ export async function CreateCompany(req, res) {
 
 export async function updateCompany(req, res) {
     try {
-        const {  datos } = req.body;
-        const {id} = req.params; 
-        const updated = await update_company(id, datos);
+        const {idEmpresa} = req.params; 
+        const updated = await update_company(idEmpresa, req.body);
 
         if (updated) {
-            return res.status(200).json(updated); // 200 OK para una actualización exitosa
-
+            return res.status(200).json({message: "empresa actualizada con exito",status: "success",  empresa : updated}); // 200 OK para una actualización exitosa
         }
         return res.status(404).json({ message: "Empresa no encontrada para actualizar." });
 

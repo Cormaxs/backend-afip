@@ -8,7 +8,7 @@ auth_router.post("/register", validateRegistration, register);
 
 auth_router.post("/login", validateLogin, login);
 
-auth_router.post("/update/:id", update);
+auth_router.post("/update/:idUser", update);
 
 auth_router.delete("/delete/:id", deleteUser);
 
