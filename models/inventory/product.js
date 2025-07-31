@@ -38,14 +38,16 @@ const ProductSchema = new mongoose.Schema({
         trim: true,
         maxlength: [500, 'La descripción no puede exceder los 500 caracteres.']
     },
-    marca: {
-        type: String,
-        trim: true
+     // DESPUÉS (Forma Correcta ✅):
+     marca: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Marca', // Referencia al modelo 'Marca'
+        required: false // O true, según tu lógica de negocio
     },
     categoria: {
-        type: String,
-        required: [false, 'La categoría es obligatoria.'],
-        trim: true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Categoria', // Referencia al modelo 'Categoria'
+        required: false 
     },
     unidadMedida: {
         type: String,

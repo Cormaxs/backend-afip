@@ -3,7 +3,8 @@ import { add_product_services, update_product_services, delete_product_services,
     get_all_products_company_services, get_product_codBarra_services,
     delete_product_all_services, get_all_category_company_services,
     get_all_marca_company_services, get_product_agotados_services,
-    get_total_inventario_services } from '../../services/product_services.js'; // Asegúrate de importar todas las funciones de servicio necesarias
+    get_total_inventario_services, deleted_marca_company_services, deleted_categoria_company_services,
+    create_or_update_categoria_services, create_or_update_marca_services, } from '../../services/product_services.js'; // Asegúrate de importar todas las funciones de servicio necesarias
 
 
 
@@ -206,6 +207,40 @@ export async function get_all_marca_company_controllers(req, res) {
 }
 
 
+export async function delete_marca_controllers(req, res) {
+    try {
+        const { marca, idEmpresa } = req.params;
+        console.log("Eliminando marca:", marca, "de empresa:", idEmpresa);
+
+        const respuesta = await deleted_marca_company_services(marca, idEmpresa);
+        console.log("Respuesta del servicio:", respuesta);
+        
+        res.status(200).json(respuesta);
+
+    } catch (err) {
+        console.error("Error en delete_marca_controllers (controlador):", err.message);
+        return res.status(500).json({ error: "Error interno del servidor al eliminar la marca." });
+    }
+}
+
+export async function delete_categoria_controllers(req, res) {
+    try {
+        const { categoria, idEmpresa } = req.params;
+        console.log("Eliminando categoría:", categoria, "de empresa:", idEmpresa);
+
+        const respuesta = await deleted_categoria_company_services(categoria, idEmpresa);
+        console.log("Respuesta del servicio:", respuesta);
+        
+        res.status(200).json(respuesta);
+
+    } catch (err) {
+        console.error("Error en delete_categoria_controllers (controlador):", err.message);
+        // ✅ CORRECCIÓN: El mensaje de error ahora es específico de "categoría"
+        return res.status(500).json({ error: "Error interno del servidor al eliminar la categoría." });
+    }
+}
+
+
 export async function get_product_codBarra(req, res){
     try{
         const {idEmpresa, puntoVenta, codBarra} = req.params;
@@ -241,3 +276,51 @@ export async function get_totalInventario(req, res){
         return res.status(500).json({ error: "Error interno del servidor al obtener productos agotados." });
     }
 }
+
+
+export const create_or_update_marca_controllers = async (req, res) => {
+    try {
+        const { nombreNuevo, idEmpresa, nombreAntiguo } = req.body;
+        if (!nombreNuevo || !idEmpresa) {
+            return res.status(400).json({ error: "El nombre de la marca y el ID de la empresa son obligatorios." });
+        }
+
+        const marca = await create_or_update_marca_services(nombreNuevo, idEmpresa, nombreAntiguo);
+        
+        const message = nombreAntiguo
+            ? `Marca '${nombreAntiguo}' actualizada a '${nombreNuevo}' exitosamente.`
+            : `Marca '${nombreNuevo}' creada exitosamente.`;
+
+        res.status(200).json({
+            message,
+            marca,
+        });
+    } catch (error) {
+        console.error("Error en create_or_update_marca_controllers:", error.message);
+        res.status(500).json({ error: "Error interno del servidor al procesar la marca." });
+    }
+};
+
+export const create_or_update_categoria_controllers = async (req, res) => {
+    try {
+        const { nombreNuevo, idEmpresa, nombreAntiguo } = req.body;
+
+        if (!nombreNuevo || !idEmpresa) {
+            return res.status(400).json({ error: "El nombre de la categoría y el ID de la empresa son obligatorios." });
+        }
+
+        const categoria = await create_or_update_categoria_services(nombreNuevo, idEmpresa, nombreAntiguo);
+
+        const message = nombreAntiguo
+            ? `Categoría '${nombreAntiguo}' actualizada a '${nombreNuevo}' exitosamente.`
+            : `Categoría '${nombreNuevo}' creada exitosamente.`;
+
+        res.status(200).json({
+            message,
+            categoria,
+        });
+    } catch (error) {
+        console.error("Error en create_or_update_categoria_controllers:", error.message);
+        res.status(500).json({ error: "Error interno del servidor al procesar la categoría." });
+    }
+};

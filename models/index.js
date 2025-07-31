@@ -14,7 +14,8 @@ import Compra from './accounting/facturarecibida.js';
 import Proveedor from './accounting/proveedor.js';
 import Caja from './accounting/RegistroDeCaja.js';
 import Ticket from './sales/tikets-emitidos.js';
-
+import Marca from './inventory/Marca.js';
+import Categoria from './inventory/Categoria.js';
 export {
     Empresa,
     User,
@@ -27,5 +28,7 @@ export {
     Compra,
     Proveedor,
     Caja,
-    Ticket
+    Ticket,
+    Marca,
+    Categoria
 };
