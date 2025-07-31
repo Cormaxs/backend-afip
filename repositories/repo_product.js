@@ -1,388 +1,439 @@
-import { Product, Ticket } from '../models/index.js'; 
+import { Product, Marca, Categoria } from '../models/index.js';
 import mongoose from 'mongoose';
 
 class ProductRepository {
-  // Agrega un nuevo producto
+    // Agrega un nuevo producto
     async addProduct(productData) {
         const newProduct = new Product(productData);
         return await newProduct.save();
     }
+
+    async findOrCreateCategoriaId(nombre, empresaId) {
+        let categoria = await Categoria.findOne({ nombre: nombre, empresa: empresaId });
+        if (!categoria) {
+            categoria = new Categoria({ nombre: nombre, empresa: empresaId });
+            await categoria.save();
+        }
+        return categoria._id;
+    }
+
+    async findOrCreateMarcaId(nombre, empresaId) {
+        let marca = await Marca.findOne({ nombre: nombre, empresa: empresaId });
+        if (!marca) {
+            marca = new Marca({ nombre: nombre, empresa: empresaId });
+            await marca.save();
+        }
+        return marca._id;
+    }
+
     //busca un producto por ID
     async findById(id) {
-        return await Product.findById(id);
+        return await Product.findById(id).populate('categoria').populate('marca');
     }
 
     //busca todos los productos de todas las empresas
     async findAll(options = {}) {
-      const { page = 1, limit = 10, category, sortBy, order } = options;
-      const query = {};
-  
-      if (category) {
-          query.category = category;
-      }
-  
-      // 1. Obtener el total de productos que coinciden con la consulta
-      const totalProducts = await Product.countDocuments(query);
-  
-      let productsQuery = Product.find(query)
-                                 .skip((page - 1) * limit)
-                                 .limit(parseInt(limit));
-  
-      if (sortBy) {
-          const sortOrder = order === 'desc' ? -1 : 1;
-          productsQuery = productsQuery.sort({ [sortBy]: sortOrder });
-      }
-  
-      const products = await productsQuery.exec();
-  
-      // 2. Calcular la información de paginación
-      const totalPages = Math.ceil(totalProducts / limit);
-      const currentPage = parseInt(page);
-      const hasNextPage = currentPage < totalPages;
-      const hasPrevPage = currentPage > 1;
-      const nextPage = hasNextPage ? currentPage + 1 : null;
-      const prevPage = hasPrevPage ? currentPage - 1 : null;
-  
-      // 3. Devolver los productos y la información de paginación
-      return {
-          products,
-          pagination: {
-              totalProducts,
-              totalPages,
-              currentPage,
-              limit: parseInt(limit),
-              hasNextPage,
-              hasPrevPage,
-              nextPage,
-              prevPage,
-          }
-      };
-  } 
-    //busca productos de empresa especifica
+        const { page = 1, limit = 10, category, sortBy, order } = options;
+        const query = {};
+
+        if (category) {
+            query.category = category;
+        }
+
+        const totalProducts = await Product.countDocuments(query);
+
+        let productsQuery = Product.find(query)
+            .skip((page - 1) * limit)
+            .limit(parseInt(limit))
+            .populate('categoria')
+            .populate('marca');
+
+        if (sortBy) {
+            const sortOrder = order === 'desc' ? -1 : 1;
+            productsQuery = productsQuery.sort({ [sortBy]: sortOrder });
+        }
+
+        const products = await productsQuery.exec();
+
+        const totalPages = Math.ceil(totalProducts / limit);
+        const currentPage = parseInt(page);
+        const hasNextPage = currentPage < totalPages;
+        const hasPrevPage = currentPage > 1;
+        const nextPage = hasNextPage ? currentPage + 1 : null;
+        const prevPage = hasPrevPage ? currentPage - 1 : null;
+
+        return {
+            products,
+            pagination: {
+                totalProducts,
+                totalPages,
+                currentPage,
+                limit: parseInt(limit),
+                hasNextPage,
+                hasPrevPage,
+                nextPage,
+                prevPage,
+            }
+        };
+    }
+    
+    // --- FUNCIÓN MODIFICADA PARA BUSCAR SIN ERRORES ---
     async get_products_company(company_id, page = 1, limit = 10, category, producto, marca, puntoVenta, sortBy, order) {
-      // --- (El código para validar page y limit no cambia) ---
-      //console.log("Filtros recibidos ->", { page, limit, category, producto, marca, puntoVenta });
-      page = parseInt(page);
-      limit = parseInt(limit);
-  
-      if (isNaN(page) || page < 1) { page = 1; }
-      if (isNaN(limit) || limit < 1) { limit = 10; }
-  
-      const query = { empresa: company_id };
-  
-      // Filtros específicos
-      if (category) {
-          query.categoria = category;
-      }
-      if (marca) {
-          // Se mantiene la búsqueda flexible para marca
-          query.marca = { $regex: marca, $options: 'i' };
-      }
-  
-      // ====================== INICIO DEL CAMBIO ======================
-      // NUEVO: Filtro por Punto de Venta
-      // Si se proporciona un puntoVenta (y no es un string vacío), se añade a la query.
-      if (puntoVenta) {
-          query.puntoVenta = puntoVenta;
-      }
-      // ======================= FIN DEL CAMBIO ========================
-  
-      // Búsqueda avanzada por palabras individuales en producto, marca y categoría
-      if (producto) {
-          const searchWords = producto.trim().split(/\s+/);
-          
-          // Esta condición se combina con las anteriores (empresa, categoria, marca, puntoVenta)
-          query.$and = searchWords.map(word => ({
-              $or: [
-                  { producto: { $regex: word, $options: 'i' } },
-                  { marca: { $regex: word, $options: 'i' } },
-                  { categoria: { $regex: word, $options: 'i' } }
-              ]
-          }));
-      }
-  
-      try {
-          // --- (El resto de la lógica para contar, ordenar y paginar no necesita cambios) ---
-          
-          const totalProducts = await Product.countDocuments(query);
-          let productsQuery = Product.find(query);
-  
-          if (sortBy) {
-              const sortOrder = order === 'desc' ? -1 : 1;
-              productsQuery = productsQuery.sort({ [sortBy]: sortOrder });
-          }
-  
-          const products = await productsQuery
-              .skip((page - 1) * limit)
-              .limit(limit)
-              .exec();
-  
-          const totalPages = Math.ceil(totalProducts / limit);
-          const hasNextPage = page < totalPages;
-          const hasPrevPage = page > 1;
-          const nextPage = hasNextPage ? page + 1 : null;
-          const prevPage = hasPrevPage ? page - 1 : null;
-  
-          return {
-              products,
-              pagination: {
-                  totalProducts,
-                  currentPage: page,
-                  totalPages,
-                  limit,
-                  hasNextPage,
-                  hasPrevPage,
-                  nextPage,
-                  prevPage,
-              },
-          };
-      } catch (error) {
-          console.error("Error al obtener productos de la empresa:", error);
-          throw new Error("No se pudieron obtener los productos de la empresa en este momento.");
-      }
-  }
+        page = parseInt(page);
+        limit = parseInt(limit);
+
+        if (isNaN(page) || page < 1) { page = 1; }
+        if (isNaN(limit) || limit < 1) { limit = 10; }
+
+        const query = { empresa: company_id };
+
+        try {
+            // 1. Convertir los nombres de marca y categoría a sus respectivos IDs
+            let categoryId = null;
+            if (category) {
+                const foundCategory = await Categoria.findOne({ nombre: category, empresa: company_id });
+                if (foundCategory) {
+                    categoryId = foundCategory._id;
+                    query.categoria = categoryId;
+                }
+            }
+
+            let marcaId = null;
+            if (marca) {
+                const foundMarca = await Marca.findOne({ nombre: marca, empresa: company_id });
+                if (foundMarca) {
+                    marcaId = foundMarca._id;
+                    query.marca = marcaId;
+                }
+            }
+
+            if (puntoVenta) {
+                query.puntoVenta = puntoVenta;
+            }
+
+            // 2. Manejar la búsqueda avanzada de texto
+            if (producto) {
+                const searchWords = producto.trim().split(/\s+/);
+                
+                // Construir un array de condiciones para el $and
+                const andConditions = searchWords.map(word => {
+                    const regex = new RegExp(word, 'i');
+                    return {
+                        $or: [
+                            { producto: regex },
+                            { descripcion: regex },
+                            // Aquí usamos el ID para la búsqueda, si se encontró
+                            ...(categoryId ? [{ categoria: categoryId }] : []),
+                            ...(marcaId ? [{ marca: marcaId }] : []),
+                        ]
+                    };
+                });
+                
+                // Combinar la query existente con las condiciones de búsqueda
+                query.$and = andConditions;
+            }
+
+            const totalProducts = await Product.countDocuments(query);
+            let productsQuery = Product.find(query)
+                .populate('categoria', 'nombre')
+                .populate('marca', 'nombre');
+
+            if (sortBy) {
+                const sortOrder = order === 'desc' ? -1 : 1;
+                productsQuery = productsQuery.sort({ [sortBy]: sortOrder });
+            }
+
+            const products = await productsQuery
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .lean()
+                .exec();
+
+            const formattedProducts = products.map(p => ({
+                ...p,
+                marca: p.marca ? p.marca.nombre : null,
+                categoria: p.categoria ? p.categoria.nombre : null,
+            }));
+
+            const totalPages = Math.ceil(totalProducts / limit);
+            const hasNextPage = page < totalPages;
+            const hasPrevPage = page > 1;
+            const nextPage = hasNextPage ? page + 1 : null;
+            const prevPage = hasPrevPage ? page - 1 : null;
+
+            return {
+                products: formattedProducts,
+                pagination: {
+                    totalProducts,
+                    currentPage: page,
+                    totalPages,
+                    limit,
+                    hasNextPage,
+                    hasPrevPage,
+                    nextPage,
+                    prevPage,
+                },
+            };
+        } catch (error) {
+            console.error("Error al obtener productos de la empresa:", error);
+            throw new Error("No se pudieron obtener los productos de la empresa en este momento.");
+        }
+    }
+    // --- FIN DE LA FUNCIÓN MODIFICADA ---
 
     // Actualiza un producto específico por ID
     async updateProduct(id, updateData) {
         return await Product.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
     }
+
     //actualiza stock de productos al venderlos
     async updateProductVentas(productsToUpdate) {
-      try {
-        //console.log("Productos a actualizar:", productsToUpdate);
-    
-        const updatedProducts = [];
-        for (const productInfo of productsToUpdate) {
-          const { id, cantidadARestar } = productInfo;
-    
-         // console.log(`Intentando actualizar producto ID: ${id}, Cantidad a restar: ${cantidadARestar}`);
-    
-          // --- Validación de stock antes de actualizar ---
-          // Primero, obtenemos el producto para verificar su stock actual
-          const product = await Product.findById(id);
-    
-          if (!product) {
-            throw new Error(`Producto con ID ${id} no encontrado. No se pudo procesar la venta.`);
-          }
-    
-          // Calculamos el stock resultante
-          const stockResultante = product.stock_disponible - cantidadARestar;
-    
-          // Si el stock resultante es negativo, lanzamos un error
-          if (stockResultante < -10) {
-            throw new Error(
-              `No hay suficiente stock para el producto "${product.descripcion}" (ID: ${id}). ` +
-              `Stock actual: ${product.stock_disponible}. Cantidad solicitada: ${cantidadARestar}.`
-            );
-          }
-          // --- Fin de la validación de stock ---
-    
-          // Si el stock es suficiente, procedemos con la actualización
-          const updatedProduct = await Product.findByIdAndUpdate(
-            id,
-            {
-              $inc: { stock_disponible: -cantidadARestar } // Resta la cantidad al stock_disponible
-            },
-            { new: true, runValidators: true } // new: true devuelve el documento actualizado; runValidators: true ejecuta las validaciones del esquema
-          );
-    
-          // Aunque ya validamos antes, esta es una doble verificación si findByIdAndUpdate por alguna razón no retorna nada
-          if (!updatedProduct) {
-            throw new Error(`Producto con ID ${id} no se pudo actualizar después de la validación inicial.`);
-          }
-          updatedProducts.push(updatedProduct);
+        try {
+            const updatedProducts = [];
+            for (const productInfo of productsToUpdate) {
+                const { id, cantidadARestar } = productInfo;
+                const product = await Product.findById(id);
+
+                if (!product) {
+                    throw new Error(`Producto con ID ${id} no encontrado. No se pudo procesar la venta.`);
+                }
+
+                const stockResultante = product.stock_disponible - cantidadARestar;
+                if (stockResultante < -10) {
+                    throw new Error(
+                        `No hay suficiente stock para el producto "${product.descripcion}" (ID: ${id}). ` +
+                        `Stock actual: ${product.stock_disponible}. Cantidad solicitada: ${cantidadARestar}.`
+                    );
+                }
+                const updatedProduct = await Product.findByIdAndUpdate(
+                    id,
+                    { $inc: { stock_disponible: -cantidadARestar } },
+                    { new: true, runValidators: true }
+                );
+                if (!updatedProduct) {
+                    throw new Error(`Producto con ID ${id} no se pudo actualizar después de la validación inicial.`);
+                }
+                updatedProducts.push(updatedProduct);
+            }
+            return updatedProducts;
+        } catch (error) {
+            console.error('Error al actualizar el producto(s) y restar stock:', error);
+            throw error;
         }
-    
-        return updatedProducts; // Devuelve un array con todos los productos actualizados
-    
-      } catch (error) {
-        console.error('Error al actualizar el producto(s) y restar stock:', error);
-        throw error; // Re-lanza el error para que sea manejado por el código que llama
-      }
     }
-//elimina producto por ID
+
+    //elimina producto por ID
     async deleteProduct(id) {
         return await Product.findByIdAndDelete(id);
     }
 
     async deleteProductAll(idEmpresa) {
-      const resultado = await Product.deleteMany({ empresa: idEmpresa });
-      return resultado;
-  }
+        const resultado = await Product.deleteMany({ empresa: idEmpresa });
+        return resultado;
+    }
+
     //busca por codigo de barras
     async findByBarcode(idEmpresa, puntoVenta, codBarra) {
-      console.log(`${idEmpresa} ${puntoVenta} ${codBarra}`)
-try{
-      const query = {
-          empresa: idEmpresa,
-          puntoVenta: puntoVenta,
-          codigoBarra: codBarra
-      };
-const resivido = await Product.findOne(query);
-console.log(resivido)
-      return resivido;
-    }catch(err){
-    console.error(err)
-    }
-  }
-
-
-  async   get_category_empresa(idEmpresa, idPuntoVenta) {
-    // Valida que se haya proporcionado un idEmpresa
-    if (!idEmpresa) {
-        throw new Error("El ID de la empresa es requerido.");
-    }
- 
-    try {
-        // 1. Se crea el filtro base con la condición obligatoria.
-        const filtro = { empresa: idEmpresa };
-
-        // 2. Si se proporciona un `idPuntoVenta`, se añade al filtro.
-        if (idPuntoVenta) {
-            filtro.puntoVenta = idPuntoVenta;
+        console.log(`${idEmpresa} ${puntoVenta} ${codBarra}`)
+        try {
+            const query = {
+                empresa: idEmpresa,
+                puntoVenta: puntoVenta,
+                codigoBarra: codBarra
+            };
+            const resivido = await Product.findOne(query);
+            console.log(resivido)
+            return resivido;
+        } catch (err) {
+            console.error(err)
         }
-
-        // 3. Se utiliza el filtro dinámico en la consulta.
-        const categories = await Product.distinct('categoria', filtro);
-        
-        return categories;
-        
-    } catch (error) {
-        console.error("Error al obtener las categorías de la empresa:", error);
-        throw new Error("No se pudieron obtener las categorías en este momento.");
     }
-}
 
-
-  async  get_marca_empresa(idEmpresa, idPuntoVenta) {
-    // Valida que se haya proporcionado un idEmpresa
-    if (!idEmpresa) {
-        throw new Error("El ID de la empresa es requerido.");
+    async get_category_empresa(idEmpresa) {
+        if (!idEmpresa) {
+            throw new Error("El ID de la empresa es requerido.");
+        }
+        try {
+            const categories = await Categoria.find({ empresa: idEmpresa }).distinct('nombre');
+            return categories;
+        } catch (error) {
+            console.error("Error al obtener las categorías de la empresa:", error);
+            throw new Error("No se pudieron obtener las categorías en este momento.");
+        }
     }
- console.log("marca desde repositories ->",idPuntoVenta)
-    try {
-        // 1. Se crea el filtro base con la condición obligatoria.
-        const filtro = { empresa: idEmpresa };
 
-        // 2. Si se proporciona un `idPuntoVenta`, se añade al filtro.
-        if (idPuntoVenta) {
-            filtro.puntoVenta = idPuntoVenta;
+    async get_marca_empresa(idEmpresa) {
+        if (!idEmpresa) {
+            throw new Error("El ID de la empresa es requerido.");
         }
-
-        // 3. Se utiliza el filtro dinámico y se corrige el campo a 'marca'.
-        const marcas = await Product.distinct('marca', filtro);
-        
-        return marcas;
-        
-    } catch (error) {
-        // Se corrige el mensaje de error para que sea específico de "marcas".
-        console.error("Error al obtener las marcas de la empresa:", error);
-        throw new Error("No se pudieron obtener las marcas en este momento.");
+        try {
+            const marcas = await Marca.find({ empresa: idEmpresa }).distinct('nombre');
+            return marcas;
+        } catch (error) {
+            console.error("Error al obtener las marcas de la empresa:", error);
+            throw new Error("No se pudieron obtener las marcas en este momento.");
+        }
     }
-}
 
-  async getProductAgotados(idEmpresa, puntoDeVenta, page = 1, limit = 10) {
-    try {
-        // 1. --- VALIDACIÓN Y PREPARACIÓN ---
-        if (!mongoose.Types.ObjectId.isValid(idEmpresa)) {
-            throw new Error('ID de empresa inválido.');
-        }
+    async verificarMarcaExistente(nombreMarca, idEmpresa) {
+        const existente = await Marca.findOne({ nombre: nombreMarca, empresa: idEmpresa });
+        return existente
+    }
+    
+    async verificarCategoriaExistente(nombreCategoria, idEmpresa) {
+        const existente = await Categoria.findOne({ nombre: nombreCategoria, empresa: idEmpresa });
+        return existente
+    }
 
-        // Se crea el filtro base, que siempre se aplicará.
-        const filtro = {
-            empresa: new mongoose.Types.ObjectId(idEmpresa),
-            stock_disponible: { $lte: 0 } 
-        };
+    async deleteMarca(idMarca, idEmpresa) {
+        // La consulta del repositorio DEBE usar el ID (idMarca)
+        const desvinculacionResult = await Product.updateMany(
+            { empresa: idEmpresa, marca: idMarca },
+            { $unset: { marca: "" } }
+        );
 
-        // ✅ LÓGICA CORREGIDA:
-        // Si se proporciona un `puntoDeVenta` y es válido,
-        // se AÑADE al objeto de filtro. Si no, simplemente se ignora.
-        if (puntoDeVenta && mongoose.Types.ObjectId.isValid(puntoDeVenta)) {
-            filtro.puntoVenta = new mongoose.Types.ObjectId(puntoDeVenta);
-        }
+        const eliminacionMarcaResult = await Marca.deleteOne({ _id: idMarca, empresa: idEmpresa });
 
-        // 2. --- EJECUCIÓN DE CONSULTAS PARA PAGINACIÓN ---
-        const [totalDocs, docs] = await Promise.all([
-            Product.countDocuments(filtro),
-            Product.find(filtro)
-                .sort({ stock_disponible: 1, producto: 1 })
-                .limit(Number(limit))
-                .skip((Number(page) - 1) * Number(limit))
-                .lean()
-        ]);
-        
-        const totalPages = Math.ceil(totalDocs / limit);
-
-        // 3. --- CONSOLIDACIÓN Y RETORNO DE RESULTADOS ---
         return {
-            docs,
-            totalDocs,
-            limit: Number(limit),
-            totalPages,
-            page: Number(page),
-            hasNextPage: Number(page) < totalPages,
-            hasPrevPage: Number(page) > 1,
+            message: 'Operación finalizada.',
+            productos_modificados: desvinculacionResult.modifiedCount,
+            marcas_eliminadas: eliminacionMarcaResult.deletedCount,
         };
-
-    } catch (error) {
-        console.error("Error en MetricasRepository.getProductAgotados:", error);
-        throw error;
     }
-}
+
+    async deleteCategoria(idCategoria, idEmpresa) {
+        // La consulta del repositorio DEBE usar el ID (idCategoria)
+        const desvinculacionResult = await Product.updateMany(
+            { empresa: idEmpresa, categoria: idCategoria },
+            { $unset: { categoria: "" } }
+        );
+
+        // ✅ CORRECCIÓN: Se usa el modelo Categoria para la eliminación
+        const eliminacionCategoriaResult = await Categoria.deleteOne({ _id: idCategoria, empresa: idEmpresa });
+
+        // ✅ CORRECCIÓN: Se modifican las variables y mensajes de retorno
+        return {
+            message: 'Operación finalizada.',
+            productos_modificados: desvinculacionResult.modifiedCount,
+            categorias_eliminadas: eliminacionCategoriaResult.deletedCount,
+        };
+    }
+
+    async getProductAgotados(idEmpresa, puntoDeVenta, page = 1, limit = 10) {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(idEmpresa)) {
+                throw new Error('ID de empresa inválido.');
+            }
+            const filtro = {
+                empresa: new mongoose.Types.ObjectId(idEmpresa),
+                stock_disponible: { $lte: 0 }
+            };
+            if (puntoDeVenta && mongoose.Types.ObjectId.isValid(puntoDeVenta)) {
+                filtro.puntoVenta = new mongoose.Types.ObjectId(puntoDeVenta);
+            }
+            const [totalDocs, docs] = await Promise.all([
+                Product.countDocuments(filtro),
+                Product.find(filtro)
+                    .sort({ stock_disponible: 1, producto: 1 })
+                    .limit(Number(limit))
+                    .skip((Number(page) - 1) * Number(limit))
+                    .lean()
+            ]);
+
+            const totalPages = Math.ceil(totalDocs / limit);
+
+            return {
+                docs,
+                totalDocs,
+                limit: Number(limit),
+                totalPages,
+                page: Number(page),
+                hasNextPage: Number(page) < totalPages,
+                hasPrevPage: Number(page) > 1,
+            };
+
+        } catch (error) {
+            console.error("Error en MetricasRepository.getProductAgotados:", error);
+            throw error;
+        }
+    }
 
 
-async priceInventario(idEmpresa, puntoDeVenta) {
-  try {
-      // 1. --- VALIDACIÓN ---
-      if (!mongoose.Types.ObjectId.isValid(idEmpresa)) {
-          throw new Error('ID de empresa inválido.');
-      }
+    async priceInventario(idEmpresa, puntoDeVenta) {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(idEmpresa)) {
+                throw new Error('ID de empresa inválido.');
+            }
+            const matchFilter = {
+                empresa: new mongoose.Types.ObjectId(idEmpresa),
+                stock_disponible: { $gt: 0 }
+            };
+            if (puntoDeVenta && mongoose.Types.ObjectId.isValid(puntoDeVenta)) {
+                matchFilter.puntoVenta = new mongoose.Types.ObjectId(puntoDeVenta);
+            }
+            const resultadoAgregacion = await Product.aggregate([
+                { $match: matchFilter },
+                {
+                    $group: {
+                        _id: null,
+                        valorTotal: { $sum: { $multiply: ["$stock_disponible", "$precioCosto"] } }
+                    }
+                }
+            ]);
 
-      // Se crea el filtro base para la etapa $match.
-      // Siempre se filtrará por empresa y por stock positivo.
-      const matchFilter = {
-          empresa: new mongoose.Types.ObjectId(idEmpresa),
-          stock_disponible: { $gt: 0 }
-      };
+            const valorTotalInventario = resultadoAgregacion.length > 0 ? resultadoAgregacion[0].valorTotal : 0;
+            return {
+                valorTotalInventario: valorTotalInventario
+            };
 
-      // ✅ LÓGICA CORREGIDA:
-      // Si se proporciona un `puntoDeVenta` y es válido,
-      // se AÑADE al objeto de filtro. Si no, se ignora.
-      if (puntoDeVenta && mongoose.Types.ObjectId.isValid(puntoDeVenta)) {
-          matchFilter.puntoVenta = new mongoose.Types.ObjectId(puntoDeVenta);
-      }
+        } catch (error) {
+            console.error("Error en MetricasRepository.priceInventario:", error);
+            throw error;
+        }
+    }
 
-      // 2. --- AGREGACIÓN EN LA BASE DE DATOS ---
-      const resultadoAgregacion = await Product.aggregate([
-          // --- Etapa 1: Filtrar ($match) ---
-          // Se utiliza el objeto de filtro dinámico que acabamos de construir.
-          {
-              $match: matchFilter
-          },
-          // --- Etapa 2: Agrupar y Calcular ($group) ---
-          // Esta etapa no cambia, siempre suma los documentos que pasaron el filtro.
-          {
-              $group: {
-                  _id: null,
-                  valorTotal: {
-                      $sum: { $multiply: ["$stock_disponible", "$precioCosto"] }
-                  }
-              }
-          }
-      ]);
-      
-      // 3. --- PROCESAR Y RETORNAR EL RESULTADO ---
-      const valorTotalInventario = resultadoAgregacion.length > 0 ? resultadoAgregacion[0].valorTotal : 0;
 
-      return {
-          valorTotalInventario: valorTotalInventario
-      };
 
-  } catch (error) {
-      console.error("Error en MetricasRepository.priceInventario:", error);
-      throw error;
-  }
-}
+
+    async createOrUpdateCategoria(nombreNuevo, idEmpresa, nombreAntiguo = null) {
+        if (!nombreNuevo || !idEmpresa) {
+            throw new Error("El nombre de la categoría y el ID de la empresa son obligatorios.");
+        }
+        
+        // La consulta usa el nombreAntiguo para encontrar el documento.
+        // Si no se proporciona, busca por el nombreNuevo.
+        const query = { empresa: idEmpresa, nombre: nombreAntiguo || nombreNuevo };
+        const update = { nombre: nombreNuevo.trim() };
+        
+        const categoria = await Categoria.findOneAndUpdate(
+            query,
+            update,
+            { new: true, upsert: true, runValidators: true }
+        );
+        return categoria;
+    }
+
+   
+    async createOrUpdateMarca(nombreNuevo, idEmpresa, nombreAntiguo = null) {
+        if (!nombreNuevo || !idEmpresa) {
+            throw new Error("El nombre de la marca y el ID de la empresa son obligatorios.");
+        }
+
+        const query = { empresa: idEmpresa, nombre: nombreAntiguo || nombreNuevo };
+        const update = { nombre: nombreNuevo.trim() };
+
+        const marca = await Marca.findOneAndUpdate(
+            query,
+            update,
+            { new: true, upsert: true, runValidators: true }
+        );
+        return marca;
+    }
+
+
+
+
+
 }
 
 export default new ProductRepository();

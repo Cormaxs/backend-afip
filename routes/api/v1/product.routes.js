@@ -2,7 +2,8 @@ import { Router } from "express";
 import {add_product, update_product, delete_product, get_product_by_id, 
     get_all_products, get_all_products_company_controllers, get_product_codBarra,
     delete_product_all, get_all_category_company_controllers, get_all_marca_company_controllers,
-    get_product_agotados, get_totalInventario} from "../../../controllers/productos/product_controllers.js";
+    get_product_agotados, get_totalInventario, delete_marca_controllers, delete_categoria_controllers,
+    create_or_update_categoria_controllers, create_or_update_marca_controllers} from "../../../controllers/productos/product_controllers.js";
 
 
 const product_Router = Router();
@@ -23,6 +24,12 @@ product_Router.get("/:id",get_all_products_company_controllers); //obtiene todos
 
 product_Router.get("/get/all/category/:idEmpresa",get_all_category_company_controllers);
 product_Router.get("/get/all/marca/:idEmpresa",get_all_marca_company_controllers);
+product_Router.delete("/delete/marca/:marca/:idEmpresa",delete_marca_controllers); //eliminar marca
+product_Router.delete("/delete/categoria/:categoria/:idEmpresa",delete_categoria_controllers); //eliminar marca
+
+product_Router.post("/categorias/",create_or_update_categoria_controllers); //editar o crear categoria
+product_Router.post("/marcas/",create_or_update_marca_controllers); //editar o crear marca
+
 
 product_Router.get("/get/:codBarra/:idEmpresa/:puntoVenta", get_product_codBarra);
 
