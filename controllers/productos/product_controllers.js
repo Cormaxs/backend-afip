@@ -11,7 +11,6 @@ import { add_product_services, update_product_services, delete_product_services,
 export async function add_product(req, res) {
     try {
         const productData = req.body; 
-        console.log(productData)
         const newProduct = await add_product_services(productData);
         if(newProduct){
           return res.status(201).json(newProduct);  
@@ -36,7 +35,7 @@ export async function update_product(req, res) {
         const productId = req.params.id;
         const updateData = req.body; 
 
-        console.log(updateData)
+       
         const updatedProduct = await update_product_services(productId, updateData);
         if (!updatedProduct) {
             return res.status(404).json({ error: "Producto no encontrado para actualizar." });
@@ -142,7 +141,6 @@ export async function get_all_products_company_controllers(req, res) {
         const { page, limit, category, product, marca, puntoVenta } = req.query;
         // Cambiamos 'id' a 'company_id' para mayor claridad, asumiendo que tu ruta es algo como /products/company/:company_id
         const { id } = req.params; 
-        console.log(id, page , limit, category, product, marca, puntoVenta)
         const products = await get_all_products_company_services( 
             id, // Pasamos el ID de la empresa al servicio
             page, 
@@ -170,7 +168,6 @@ export async function get_all_category_company_controllers(req, res) {
     try {
         // Cambiamos 'id' a 'company_id' para mayor claridad, asumiendo que tu ruta es algo como /products/company/:company_id
         const { idEmpresa } = req.params; 
-        console.log("desde categoria controlers : empresa -> ", idEmpresa,"puntoVenta categoria -> ", req.query.idPuntoVenta)
         const categorys = await get_all_category_company_services( idEmpresa, req.query);
 
         if (!categorys || categorys.length === 0) {
@@ -191,7 +188,6 @@ export async function get_all_marca_company_controllers(req, res) {
     try {
         // Cambiamos 'id' a 'company_id' para mayor claridad, asumiendo que tu ruta es algo como /products/company/:company_id
         const { idEmpresa } = req.params; 
-        console.log("desde marca controlers : empresa -> ", idEmpresa,"puntoVenta marca -> ", req.query.idPuntoVenta)
         const categorys = await get_all_marca_company_services( idEmpresa, req.query);
 
         if (!categorys || categorys.length === 0) {
@@ -210,10 +206,8 @@ export async function get_all_marca_company_controllers(req, res) {
 export async function delete_marca_controllers(req, res) {
     try {
         const { marca, idEmpresa } = req.params;
-        console.log("Eliminando marca:", marca, "de empresa:", idEmpresa);
 
         const respuesta = await deleted_marca_company_services(marca, idEmpresa);
-        console.log("Respuesta del servicio:", respuesta);
         
         res.status(200).json(respuesta);
 
@@ -226,10 +220,8 @@ export async function delete_marca_controllers(req, res) {
 export async function delete_categoria_controllers(req, res) {
     try {
         const { categoria, idEmpresa } = req.params;
-        console.log("Eliminando categoría:", categoria, "de empresa:", idEmpresa);
 
         const respuesta = await deleted_categoria_company_services(categoria, idEmpresa);
-        console.log("Respuesta del servicio:", respuesta);
         
         res.status(200).json(respuesta);
 
@@ -244,7 +236,6 @@ export async function delete_categoria_controllers(req, res) {
 export async function get_product_codBarra(req, res){
     try{
         const {idEmpresa, puntoVenta, codBarra} = req.params;
-        console.log("entrada -> ",req.body);
         const encontrado = await get_product_codBarra_services(idEmpresa, puntoVenta, codBarra);
         res.send(encontrado)
     }catch(err){

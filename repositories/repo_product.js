@@ -234,7 +234,6 @@ class ProductRepository {
 
     //busca por codigo de barras
     async findByBarcode(idEmpresa, puntoVenta, codBarra) {
-        console.log(`${idEmpresa} ${puntoVenta} ${codBarra}`)
         try {
             const query = {
                 empresa: idEmpresa,
@@ -242,7 +241,6 @@ class ProductRepository {
                 codigoBarra: codBarra
             };
             const resivido = await Product.findOne(query);
-            console.log(resivido)
             return resivido;
         } catch (err) {
             console.error(err)

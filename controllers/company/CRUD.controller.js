@@ -4,14 +4,13 @@ import { register_company, update_company,delete_company, get_company, get_compa
 export async function CreateCompany(req, res) {
     try {
         const datos = req.body;
-       // console.log(datos)
+   
         const creada = await register_company(datos);
         if (creada) {
             return res.status(201).json(creada);
         }
         res.status(400).json("Company not created");
     } catch (error) {
-        console.log("errore -> ", error.errors.cuit)
         if (error.errors.cuit) {
             return res.status(409).json({ message: "el cuit esta mal formateado" }); // 409 Conflict
         }
@@ -78,7 +77,6 @@ export async function getCompany(req, res) {
 export async function getCompanyAll(req, res) {
     try{
         const result = await get_company_all();
-      //  console.log("controllers -> ",result)
         if(result){
             return res.status(200).json(result); // 200 OK para una consulta exitosa
         }

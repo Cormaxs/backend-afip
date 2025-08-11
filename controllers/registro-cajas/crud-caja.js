@@ -4,7 +4,6 @@ import {abrirCajaServices, cerrarCajaServices, agregarTransaccionCaja, getCajaBy
 
 export async function abrirCaja(req, res){
   
-console.log(req.body)
     try{
         const abierta = await abrirCajaServices(req.body);
         res.send(abierta)

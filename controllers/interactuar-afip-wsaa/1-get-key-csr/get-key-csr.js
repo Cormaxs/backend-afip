@@ -15,10 +15,8 @@ export async function generate_key_csr(req, res) {
     try {
         // Generar la clave privada
         const clavePrivadaPath = await generatePrivateKey(idString);
-        console.log('Ruta de la Clave Privada:', clavePrivadaPath);
         // Generar las credenciales AFIP (esto debería incluir la generación del CSR)
         const credencialesAfipResult = await generateAfipCredentials(datos, idString);
-        console.log('Proceso de Credenciales AFIP Completado. Resultado:', credencialesAfipResult);
         
         // Si todo es exitoso, enviar una respuesta 200 OK
         res.status(200).send({

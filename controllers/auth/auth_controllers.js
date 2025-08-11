@@ -4,7 +4,6 @@ import {create_user_folder} from '../../services/create-directories/create_folde
 
 export async function login(req, res) {
   try {
-    console.log("entrante -> ", req.body)
       const { username, password } = req.body;
       const user = await loginUser_services(username, password);
       return res.status(200).json(user); // O un token JWT aquí
@@ -45,7 +44,6 @@ export async function update(req, res) {
   try {
       const idUser = req.params.idUser; 
       const datos = req.body;
-      console.log(`Actualizando usuario con ID: ${idUser} datos -> ${datos.password}`);
       const actualizados = await updateUser_services(idUser, datos);
       if (!actualizados) {
           return res.status(404).json({ error: "Usuario no encontrado para actualizar." });

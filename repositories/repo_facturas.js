@@ -28,48 +28,56 @@ class FacturaEmitidaRepository{
                 sortBy = 'fechaCreacion',
                 sortOrder = 'desc',
                 search,
-                puntoDeVenta, // ✅ Nuevo parámetro para el filtro
+                puntoDeVenta,
                 ...filtros
             } = options;
-    
+        
             // --- Construcción de la consulta para Mongoose ---
             const query = {
                 ...filtros,
                 empresa: empresaId,
             };
             
-            // ✅ Añadir el filtro de puntoDeVenta si existe
+            // Añadir el filtro de puntoDeVenta si existe
             if (puntoDeVenta) {
                 query.puntoDeVenta = puntoDeVenta;
             }
     
+            // Corrección: Usar la consulta de búsqueda de forma adecuada
             if (search) {
-                // ... (la lógica del buscador se mantiene igual)
+                // El campo fechaEmision es un Date, no se puede buscar con $regex. 
+                // Si quieres buscar por fecha, necesitarías un rango de fechas.
+                // Para la búsqueda de texto, nos enfocamos en campos de tipo String.
+                const searchRegex = { $regex: search, $options: 'i' };
+                
+                // Agregamos una consulta $or para buscar en múltiples campos
                 query.$or = [
-                    { numeroComprobante: { $regex: search, $options: 'i' } },
-                    { nombreCliente: { $regex: search, $options: 'i' } },
-                    { cuitCliente: { $regex: search, $options: 'i' } },
+                    { numeroComprobanteCompleto: searchRegex },
+                    { tipoComprobante: searchRegex },
+                    // ✅ Campos del cliente (receptor) están anidados. Usamos la notación de punto.
+                    { 'receptor.razonSocial': searchRegex },
+                    { 'receptor.cuit': searchRegex },
                 ];
             }
-    
+        
             // El resto del código para paginación y ordenamiento es el mismo
             const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
             const skip = (parseInt(page) - 1) * parseInt(pageSize);
-    
+        
             const facturas = await FacturaEmitida.find(query)
                 .sort(sort)
                 .skip(skip)
                 .limit(parseInt(pageSize));
-    
+        
             const total = await FacturaEmitida.countDocuments(query);
-    
+        
             return {
                 total: total,
                 page: parseInt(page, 10),
                 pageSize: parseInt(pageSize, 10),
                 data: facturas,
             };
-    
+        
         } catch (err) {
             console.error("Error en findFacturas_repo:", err);
             throw new Error("Error en la capa de acceso a datos.");
@@ -79,7 +87,6 @@ class FacturaEmitidaRepository{
 
     //conseguir el ultimo numero de comprobante interno
      async findLastComprobanteInterno(empresaId, puntoDeVentaId) {
-       // console.log("Desde repositories (findLastComprobanteInterno): Empresa ID:", empresaId, "Punto de Venta ID:", puntoDeVentaId);
 
         try {
             const lastFactura = await FacturaEmitida.findOne({
@@ -103,7 +110,6 @@ class FacturaEmitidaRepository{
 
     //borrar despues
     async findLastNotaDePedidoInterno(empresaId, puntoDeVentaId, tipoFactura) {
-       console.log(tipoFactura, "desde repo_facturas.js");
         try {
             const lastNotaDePedido = await FacturaEmitida.findOne({
                 empresa: empresaId,

@@ -4,7 +4,7 @@ import UserRepository from '../repositories/repo_auth.js';
 
 export async function loginUser_services(username, password) {
     const existe = await UserRepository.findByUsername(username);
-    //console.log(existe)
+   
     if (!existe) {
         console.error(`Intento de inicio de sesión fallido para el usuario: ${username}. Usuario no encontrado.`);
         throw new Error("Credenciales inválidas."); // Error genérico para seguridad
@@ -19,11 +19,11 @@ export async function loginUser_services(username, password) {
 
 export async function registerUser_services(datos) {
     datos.password = await registerUser(datos.password);
-    console.log("Contraseña hasheada y lista para guardar.");
+    
 
     const usuarioCreado = await UserRepository.create(datos);
     if (usuarioCreado) {
-        console.log(`Usuario '${usuarioCreado.username || datos.username}' registrado correctamente.`);
+       
         return usuarioCreado;
     } else {
         // Esto indica un problema lógico si el repositorio no lanza un error por sí mismo.
@@ -46,7 +46,6 @@ export async function updateUser_services(id, datos) { // Cambiado para recibir 
 
     const updatedUser = await UserRepository.update(id, datos);
     if (updatedUser) {
-        console.log(`Usuario con ID ${id} actualizado correctamente.`);
         return updatedUser;
     } else {
         // Si el usuario no se encontró, el repositorio devuelve null/undefined.
@@ -63,7 +62,7 @@ export async function deleteUser_services(id) {
 
     const deletedUser = await UserRepository.delete(id);
     if (deletedUser) {
-        console.log(`Usuario con ID ${id} eliminado correctamente.`);
+       
         return deletedUser;
     } else {
         // Si el usuario no se encontró, el repositorio devuelve null/undefined.

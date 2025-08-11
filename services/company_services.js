@@ -1,9 +1,8 @@
 import EmpresaRepository from "../repositories/repo_company.js";
 
 export async function register_company(datos) {
-    console.log("services",datos)
+
     const usuarioCreado = await EmpresaRepository.create(datos);
-    console.log("devuelto db", usuarioCreado)
     if (usuarioCreado) {
         return usuarioCreado;
     } else {
@@ -44,7 +43,6 @@ export async function get_company(id) {
 
 export async function get_company_all() {
     const result = await EmpresaRepository.find_All();
-    console.log("services -> ", result)
     if (result) {
         return result;
     }  return("No se pudo encontrar la empresa. Es posible que el ID no exista.");

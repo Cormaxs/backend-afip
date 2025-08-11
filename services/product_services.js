@@ -3,7 +3,6 @@ import ProductRepository from '../repositories/repo_product.js';
 export async function add_product_services(productData) {
     const marca = await ProductRepository.findOrCreateMarcaId(productData.marca, productData.empresa);
     const categoria = await ProductRepository.findOrCreateCategoriaId(productData.marca, productData.empresa);
-    console.log(`marca -> ${marca} categoria -> ${categoria}`);
 
 
     const finalProductData = {
@@ -12,7 +11,7 @@ export async function add_product_services(productData) {
         categoria: categoria,
     };
 
-    console.log(`producto final -> ${finalProductData}`)
+    
     const creado = await ProductRepository.addProduct(finalProductData);
     if (creado) {
         return creado;
@@ -76,26 +75,21 @@ export async function get_all_products_services(options = {}) {
 } 
 
 export async function get_all_products_company_services( company_id, page, limit, category, producto, marca, puntoVenta ){
-    //console.log("llegaron -> ", page, limit)
-    console.log("marca services -> ", marca)
         const products = await ProductRepository.get_products_company( company_id, page, limit, category, producto, marca, puntoVenta );
-        //console.log("encontrado -> ",products)
         return products;
 }
 
 export async function get_all_category_company_services( idEmpresa, query ){
-    //console.log("llegaron -> ", page, limit)
+    
     const {idPuntoVenta} = query;
         const products = await ProductRepository.get_category_empresa( idEmpresa, idPuntoVenta );
-        //console.log("encontrado -> ",products)
+      
         return products;
 }
 
 export async function get_all_marca_company_services( idEmpresa, query ){
-    console.log("llegaron -> ", idEmpresa, query.idPuntoVenta);
     const {idPuntoVenta} = query;
         const products = await ProductRepository.get_marca_empresa( idEmpresa, idPuntoVenta );
-        //console.log("encontrado -> ",products)
         return products;
 }
 
@@ -133,13 +127,12 @@ export async function deleted_categoria_company_services(categoriaNombre, idEmpr
 }
 
 export async function get_product_codBarra_services(idEmpresa, puntoVenta, codBarra){
-    console.log(`${idEmpresa} ${puntoVenta} ${codBarra}`)
         return ProductRepository.findByBarcode(idEmpresa, puntoVenta, codBarra)
 }
 
 
 export async function update_product_ventas_services(updateData) {
-   // console.log("services -> -> ",updateData)
+   
     const productsToUpdate = updateData.items.map(item => ({
         id: item.idProduct || item._id, // Asegúrate de que el ID del producto sea correcto
         cantidadARestar: item.cantidad

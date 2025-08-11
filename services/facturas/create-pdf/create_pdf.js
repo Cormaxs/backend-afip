@@ -39,7 +39,6 @@ export async function generateFacturaPdf(datos, id, qrBase64) {
         fs.mkdirSync(userDirPath, { recursive: true });
         try {
           fs.writeFileSync(filePath, buffer);
-          console.log(`PDF de factura generado y guardado en: ${filePath}`);
           resolve(filePath); // Resuelve la promesa con la ruta del archivo cuando esté listo
         } catch (err) {
           console.error('Error al escribir el archivo PDF:', err);

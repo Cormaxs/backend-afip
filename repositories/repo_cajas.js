@@ -136,7 +136,6 @@ class CajaRepository{
             // Guardar la nueva caja en la base de datos
             const cajaGuardada = await nuevaCaja.save();
     
-            console.log(`Caja abierta exitosamente con ID: ${cajaGuardada._id}`);
             return cajaGuardada;
     
         } catch (error) {
@@ -180,7 +179,6 @@ class CajaRepository{
             // 9. Guardar los cambios en la base de datos
             const cajaCerrada = await caja.save();
     
-            console.log(`Caja ${cajaId} cerrada exitosamente.`);
             return cajaCerrada;
     
         } catch (error) {

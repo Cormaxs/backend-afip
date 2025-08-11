@@ -4,12 +4,11 @@ import { registerUser, comparePassword } from '../utils/bcrypt.js';
 //vendedor
 export async function registerVendedor_services(datos) {
     datos.password = await registerUser(datos.password);
-    console.log("Contraseña hasheada y lista para guardar.");
+ 
 
     const usuarioCreado = await VendedorRepository.create(datos);
-    console.log("usuario creado .-> ",usuarioCreado)
+
     if (usuarioCreado) {
-        console.log(`Usuario '${usuarioCreado.username || datos.username}' registrado correctamente.`);
         return usuarioCreado;
     } else {
         // Esto indica un problema lógico si el repositorio no lanza un error por sí mismo.
@@ -20,7 +19,7 @@ export async function registerVendedor_services(datos) {
 
 export async function loginVendedor_services(username, password) {
     const existe = await VendedorRepository.findByUsername(username);
-    //console.log(existe)
+
     if (!existe) {
         console.error(`Intento de inicio de sesión fallido para el usuario: ${username}. Usuario no encontrado.`);
         throw new Error("Credenciales inválidas."); // Error genérico para seguridad
@@ -47,7 +46,6 @@ export async function updateVendedor_services(id, datos) { // Cambiado para reci
 
     const updatedUser = await VendedorRepository.update(id, datos);
     if (updatedUser) {
-        console.log(`Usuario con ID ${id} actualizado correctamente.`);
         return updatedUser;
     } else {
         // Si el usuario no se encontró, el repositorio devuelve null/undefined.
@@ -64,7 +62,7 @@ export async function deleteVendedor_services(id) {
 
     const deletedUser = await VendedorRepository.delete(id);
     if (deletedUser) {
-        console.log(`Usuario con ID ${id} eliminado correctamente.`);
+
         return deletedUser;
     } else {
         // Si el usuario no se encontró, el repositorio devuelve null/undefined.
