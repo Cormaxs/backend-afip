@@ -10,8 +10,8 @@ export async function createSinAfip(datos, idUsuario, idEmpresa, datosEmpresa) {
    // console.log("en services->", datos); // Log para depuración, si es necesario
 
  //restar la cantidad del producto
-        const restado = await update_product_ventas_services(datos);
- // console.log(restado);
+        const restado = await update_product_ventas_services(datos); 
+    //console.log("restado -> ",restado, "datos -> ",datos);
 
     // Configuración de rutas para guardar el PDF
     const projectRoot = path.resolve();

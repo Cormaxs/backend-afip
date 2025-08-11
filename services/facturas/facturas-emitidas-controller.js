@@ -7,6 +7,7 @@ export async function facEmitidasControllers(datos, ubicacionGuardado) {
     // console.log("Datos de factura para guardar:", JSON.stringify(filledInvoice, null, 2)); // Para depuración
     
     const guardada = await facturaEmitida(filledInvoice);
+    console.log("Factura guardada en la base de datos:", guardada);
     return guardada; //console.log("Guardada -> ",guardada);
   } catch (err) {
     console.error("Error al procesar la factura:", err);

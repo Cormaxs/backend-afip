@@ -8,3 +8,9 @@ export async function facturaEmitida(datos){
 export async function getNumComprobante(empresa, punto){
     return await FacturaEmitidaRepository.findLastComprobanteInterno(empresa, punto)
 }
+
+
+export async function getFacturas_services(options) {
+    console.log("recibido  services -> ", options)
+    return await FacturaEmitidaRepository.findFacturas_repo(options);
+}

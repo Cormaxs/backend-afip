@@ -141,7 +141,7 @@ export async function get_product_codBarra_services(idEmpresa, puntoVenta, codBa
 export async function update_product_ventas_services(updateData) {
    // console.log("services -> -> ",updateData)
     const productsToUpdate = updateData.items.map(item => ({
-        id: item.idProduct,
+        id: item.idProduct || item._id, // Asegúrate de que el ID del producto sea correcto
         cantidadARestar: item.cantidad
       }));
     const actualizado = await ProductRepository.updateProductVentas(productsToUpdate);
