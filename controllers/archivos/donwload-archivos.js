@@ -9,7 +9,6 @@ const __dirname = path.dirname(__filename);
 //devuelve tickets internos
 export async function getPdfEmpresa(req, res) {
   try {
-    console.log("esta en tickets no en facturas, donwload archivos")
     const {idAdmin, ventaId } = req.params;
     const baseDirectory = path.join(__dirname, '..', '..', 'raiz-users');
 
@@ -22,7 +21,6 @@ export async function getPdfEmpresa(req, res) {
       filename
     );
 
-    //console.log('Ruta del archivo solicitada:', filePath);
 
     // Verifica si el archivo existe
     if (!fs.existsSync(filePath)) {
@@ -40,7 +38,6 @@ export async function getPdfEmpresa(req, res) {
           res.status(500).send('Error interno del servidor al intentar descargar el archivo.');
         }
       } else {
-        console.log('Archivo descargado exitosamente:', filePath);
       }
     });
 
@@ -65,7 +62,6 @@ export async function getPdfEmpresaFacturas(req, res) {
       filename
     );
 
-    //console.log('Ruta del archivo solicitada:', filePath);
 
     // Verifica si el archivo existe
     if (!fs.existsSync(filePath)) {
@@ -83,7 +79,6 @@ export async function getPdfEmpresaFacturas(req, res) {
           res.status(500).send('Error interno del servidor al intentar descargar el archivo.');
         }
       } else {
-        console.log('Archivo descargado exitosamente:', filePath);
       }
     });
 

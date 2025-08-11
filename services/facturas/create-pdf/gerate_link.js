@@ -1,5 +1,4 @@
 export async function GenerateURL(datos) {
-  console.log("Datos recibidos en GenerateURL:", datos, "FIN DATOS");
 
   // Función auxiliar para limpiar y parsear números con posible formato de CUIT/Número de comprobante
   const cleanAndParseInt = (value) => {
@@ -42,7 +41,7 @@ export async function GenerateURL(datos) {
       "codAut": datos.comprobante.cae
   };
 
-  console.log("datos -> ", datosFacturaParaQR)
+
   // Validaciones básicas antes de generar la URL (opcional pero recomendable)
   // Esto te ayuda a depurar si un dato crítico falta o es inválido antes de codificar.
   if (isNaN(datosFacturaParaQR.cuit) || datosFacturaParaQR.cuit <= 0) {
@@ -57,7 +56,7 @@ export async function GenerateURL(datos) {
 
   // 1. Convertir el objeto de datos a una cadena JSON
   const jsonString = JSON.stringify(datosFacturaParaQR);
-  console.log("JSON de la factura para el QR (listo para codificar):", jsonString);
+
 
   // 2. Codificar la cadena JSON a Base64 URL-safe
   // btoa() codifica a Base64 estándar. Luego, reemplazamos caracteres no URL-safe y padding
@@ -69,8 +68,7 @@ export async function GenerateURL(datos) {
   // 3. Construir la URL final para el QR
   const urlParaQR = `https://www.afip.gob.ar/fe/qr/?p=${base64UrlSafe}`;
 
-  console.log("La URL completa para el QR es:");
-  console.log(urlParaQR);
+
 
   return urlParaQR;
 }

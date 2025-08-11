@@ -14,7 +14,7 @@ export async function generateQrCodeBase64(url, outputPath = null) {
       // Extrae solo los datos Base64 de la Data URL (quitando 'data:image/png;base64,')
       const base64Data = qrCodeDataUrl.split(';base64,').pop();
       fs.writeFileSync(outputPath, base64Data, { encoding: 'base64' });
-      console.log(`QR guardado como PNG en: ${outputPath}`);
+    
     }
 
     return qrCodeDataUrl; // Devuelve la Data URL completa

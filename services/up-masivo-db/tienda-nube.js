@@ -78,7 +78,6 @@ const processProductData = (row, empresaId, puntoVentaId, rowNumber) => {
  * Servicio para la migración de productos desde un archivo de Excel/CSV de Tienda Nube.
  */
 export async function tiendaNube(fileBuffer, originalFileName, fileMimetype, empresaId, puntoVentaId) {
-    console.log(`[Servicio] Iniciando proceso para archivo: ${originalFileName}`);
 
     let jsonData;
 
@@ -95,7 +94,6 @@ export async function tiendaNube(fileBuffer, originalFileName, fileMimetype, emp
         throw new Error(`Error al leer el archivo: ${parseError.message}`);
     }
 
-    console.log(`[Servicio] Filas leídas del archivo: ${jsonData.length}`);
 
     if (jsonData.length === 0) {
         throw new Error('El archivo está vacío o no contiene datos procesables. Por favor, asegúrate de que el archivo no esté vacío y los encabezados sean correctos.');
@@ -137,7 +135,6 @@ export async function tiendaNube(fileBuffer, originalFileName, fileMimetype, emp
         }
     }
 
-    console.log(`[Servicio] Productos válidos para insertar: ${productsToInsert.length}`);
 
     if (productsToInsert.length === 0) {
         throw new Error('No se pudieron procesar productos válidos para insertar. Revisa los errores de validación.');

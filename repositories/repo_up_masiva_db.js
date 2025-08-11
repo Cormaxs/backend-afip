@@ -51,7 +51,6 @@ class ProductoRepository {
         try {
             const result = await Product.insertMany(productsToInsert, { ordered: false });
             successfulInsertsCount = result.length;
-            console.log(`[Repo DB] ${successfulInsertsCount} productos insertados exitosamente.`);
         } catch (dbError) {
             console.error("[Repo DB] Error durante la inserción masiva en DB:", dbError);
             if (dbError.code === 11000 && dbError.writeErrors) {

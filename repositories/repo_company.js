@@ -4,9 +4,7 @@ class EmpresaRepository{
      // Crea un nuevo usuario en la base de datos
      async create(empresaData) {
         const newEmpresa = new Empresa(empresaData);
-        console.log("repo -> ", newEmpresa);
         const guardada = await newEmpresa.save();
-        console.log("repo guardada -> ", guardada);
         return guardada;
     }
 

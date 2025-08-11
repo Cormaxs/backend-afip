@@ -9,12 +9,11 @@ import fs from 'fs/promises';
 
 export async function facturasCompletaAfip(req, res) {
     try {
-        console.log("Datos recibidos en facturaCompleta:", req.body); // Para depuración, puedes eliminarlo en producción
         const { id, afipRequestData, facturaData, idEmpresa,puntoVenta } = req.body; // Desestructuramos para mayor claridad
         // 2. Comunicarse con AFIP para obtener el CAE
         // El `createXML` debería lanzar un error si algo falla en la comunicación o si AFIP no responde.
         const numero = (await getNumComprobante(idEmpresa, puntoVenta)+1);
-        //console.log("factura emitida -> ", numero, typeof(numero))
+     
         const aprobarFactura = await createXML(afipRequestData, id, numero); 
 
         // 3. Verificar la respuesta de AFIP
@@ -41,7 +40,7 @@ export async function facturasCompletaAfip(req, res) {
             
             // 4.crea pdf y Guardar la factura en tu base de datos
             const facturaGenerada = await create_Factura(facturaData, id);
-           // console.log("antes de pasar para base de datos",facturaData)
+          
             await facEmitidasControllers(facturaData, facturaGenerada);
             // 5. Enviar respuesta exitosa al cliente
             return res.status(201).json({ 
@@ -106,7 +105,6 @@ const RECEPTOR_IVA_MAP = {
 //genera todas las facturas, tanto con afip y sin afip, pero sin mandar a afip
 export async function NotaDePedido(req, res) {
     try {
-        console.log("Datos recibidos en notasdepedidos:", req.body);
 
         // Desestructuración de datos: extraemos los datos de factura y otros campos clave
         const { id, idEmpresa, puntoVenta, facturaData } = req.body;
@@ -120,18 +118,15 @@ export async function NotaDePedido(req, res) {
                 details: "El campo 'id' es obligatorio para guardar la factura."
             });
         }
-       // console.log("comprobante tipo -> ", facturaData.comprobante.tipo)
         // 1. Obtener el siguiente número de comprobante para notas de pedido.
         // Asumiendo que `FacturaEmitidaRepository` tiene una función para esto.
 
 
         //antes de crear la factura resto la cantidad de productos
         const restado = await update_product_ventas_services(facturaData);
-        console.log("restado -> ", restado, "datos -> ", facturaData);
         const tipoComprobante = facturaData.comprobante.tipo;
         const ultimoNumero = await FacturaEmitidaRepository.findLastNotaDePedidoInterno(idEmpresa, puntoVenta, tipoComprobante);
         const nuevoNumero = ultimoNumero ? parseInt(ultimoNumero) + 1 : 1;
-       // console.log("ultimo numero -> ", ultimoNumero, "nuevo numero -> ", nuevoNumero, tipoComprobante);
         // 2. Formatear el número de comprobante.
         const puntoVentaFormateado = String(facturaData.comprobante.puntoVenta).padStart(5, '0');
         const numeroComprobanteFormateado = String(nuevoNumero).padStart(8, '0');
@@ -253,8 +248,6 @@ export async function NotaDePedido(req, res) {
 export async function getFacturas(req, res) {
     try{
         const options = req.query; 
-
-        console.log("recibido -> ", options);
         
         const respuesta = await getFacturas_services(options);
         res.send(respuesta); 

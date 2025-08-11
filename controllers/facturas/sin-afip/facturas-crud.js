@@ -5,7 +5,6 @@ export async function sinAfip(req, res) {
     try {
         const { datos, idEmpresa } = req.body;
         const { id } = req.params; 
-        console.log(datos, id, idEmpresa)
         const datosEmpresa = await get_company(idEmpresa);
         // Llamamos al servicio para crear el ticket, pasando todos los datos necesarios
         const resultadoTicket = await createSinAfip(datos, id, idEmpresa, datosEmpresa); 
@@ -30,9 +29,6 @@ export async function getTiketsCompany(req, res) {
         // Puedes pasar directamente req.query como las 'options' a tu servicio,
         // ya que Express parsea los query params como un objeto.
         const options = req.query; 
-        
-        console.log("ID de Empresa (params): ", idEmpresa);
-        console.log("Opciones de paginación (query) puntoventa: ", options.puntoventa);
 
         // Llama al servicio, pasando el idEmpresa de la empresa y las opciones combinadas
         const result = await getTiketsCompanyServices(idEmpresa, options); 

@@ -20,7 +20,6 @@ export async function saveCrt(req, res) {
         //  Write the certificate content to the file
         // No fs.mkdir() call here as the directory is guaranteed to exist.
         await fs.writeFile(certificateFilePath, certificateContent);
-        console.log(`Certificate saved successfully to: ${certificateFilePath}`);
 
         // Send success response
         return res.status(200).send({
