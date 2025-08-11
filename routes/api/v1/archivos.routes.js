@@ -1,7 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import path from "path";
-import {getPdfEmpresa} from "../../../controllers/archivos/donwload-archivos.js";
+import {getPdfEmpresa, getPdfEmpresaFacturas} from "../../../controllers/archivos/donwload-archivos.js";
 import {migrarDb} from "../../../controllers/archivos/masivo.productos.js";
 
 const archivos_routes = Router();
@@ -34,7 +34,8 @@ const upload = multer({
 
 //requiere el params -> idAdmin, ventaId
 archivos_routes.get("/descargar/:idAdmin/:ventaId", getPdfEmpresa)
-
+//descargas de facturas
+archivos_routes.get("/facturas/:idAdmin/:ventaId", getPdfEmpresaFacturas)
 
 //productos a base de datos
 

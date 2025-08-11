@@ -3,99 +3,93 @@ import mongoose from 'mongoose';
 
 const facturaEmitidaSchema = new mongoose.Schema({
     // --- Referencias al Emisor (Empresa), Vendedor y Punto de Venta ---
-    empresa: { // La empresa principal que emite la factura
+    empresa: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Empresa', // ¡CAMBIO CLAVE AQUÍ! Referencia al modelo 'Empresa'
+        ref: 'Empresa',
         required: [true, 'La factura debe estar asociada a una empresa propietaria.']
     },
-    vendedor: { // El vendedor que generó esta factura
+    vendedor: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Vendedor',
         required: [true, 'La factura debe estar asociada a un vendedor.']
     },
-    puntoDeVenta: { // El punto de venta desde donde se emitió esta factura
+    puntoDeVenta: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'PuntoDeVenta',
         required: [true, 'La factura debe estar asociada a un punto de venta.']
     },
 
     // --- Datos de la Factura (similares a lo que AFIP procesa y lo que imprimes) ---
-    tipoComprobante: { // Ej: 'FACTURA A', 'FACTURA B', 'NOTA DE CRÉDITO A'
+    tipoComprobante: { // Ej: 'FACTURA A', 'NOTA DE CRÉDITO A', 'NOTA DE PEDIDO'
         type: String,
         required: true,
         trim: true
     },
-    codigoTipoComprobante: { // Código AFIP (ej. '001', '006')
+    codigoTipoComprobante: {
         type: String,
-        required: true,
-        trim: true
+        trim: false // Ahora puede ser nulo para comprobantes no fiscales
     },
-    numeroComprobanteInterno: { // Nuevo: El número correlativo del comprobante (ej. 23)
+    numeroComprobanteInterno: {
         type: Number,
         required: true,
         min: 1
     },
-    numeroComprobanteCompleto: { // El número completo Ej: '00001-00000023' (Pvta-Número)
-        type: String,
-        required: true,
-        unique: true, // Debe ser único en tu sistema (ya cubierto por el índice compuesto)
-        trim: true
-    },
-    fechaEmision: { // Fecha de la factura (la que se envía a AFIP)
-        type: Date,
-        required: true
-    },
-    cae: { // Código de Autorización Electrónica (devuelto por AFIP)
+    numeroComprobanteCompleto: {
         type: String,
         required: true,
         trim: true
     },
-    fechaVtoCae: { // Fecha de vencimiento del CAE (devuelto por AFIP)
+    fechaEmision: {
         type: Date,
         required: true
     },
-    estadoAFIP: { // Resultado de la solicitud a AFIP (ej. 'A' (Aprobado), 'R' (Rechazado))
+    cae: {
         type: String,
-        enum: ['A', 'R', 'O', 'P'], // A: Aprobado, R: Rechazado, O: Observado, P: Pendiente
-        required: true
+        trim: true,
+        required: false
     },
-    observacionesAFIP: { // Mensajes de error/observación de AFIP si los hubiera
+    fechaVtoCae: {
+        type: Date,
+        required: false
+    },
+    estadoAFIP: {
+        type: String,
+        enum: ['A', 'R', 'O', 'P', 'NO_APLICA'], // Nuevo estado para no fiscales
+        default: 'NO_APLICA'
+    },
+    observacionesAFIP: {
         type: String,
         trim: true
     },
     // --- Datos del Receptor (Cliente) ---
     receptor: {
-        // Podrías referenciar a un modelo 'Cliente' si lo creas
-        // cliente: { type: mongoose.Schema.Types.ObjectId, ref: 'Cliente' },
         razonSocial: { type: String, required: true, trim: true },
-        cuit: { type: String, trim: true }, // Puede ser CUIT, DNI, CUIL, etc.
-        docTipo: { type: Number, required: true }, // Código AFIP del tipo de documento (ej. 80 para CUIT)
-        docNro: { type: String, required: true, trim: true }, // Número de documento del receptor
-        condicionIVA: { type: String, required: true, trim: true }, // Ej: 'Responsable Inscripto', 'Consumidor Final'
-        condicionIVACodigo: { type: Number, required: true }, // Código AFIP de la condición IVA del receptor
+        cuit: { type: String, trim: true },
+        docTipo: { type: Number, required: true },
+        docNro: { type: String, required: true, trim: true },
+        condicionIVA: { type: String, required: true, trim: true },
+        condicionIVACodigo: { type: Number, required: true },
         domicilio: { type: String, trim: true },
         localidad: { type: String, trim: true },
         provincia: { type: String, trim: true },
-        email: { type: String, trim: true, match: [/.+@.+\..+/, 'Por favor, introduce un correo electrónico válido.'] } // Correo del cliente
+        email: { type: String, trim: true, match: [/.+@.+\..+/, 'Por favor, introduce un correo electrónico válido.'] }
     },
 
     // --- Detalles de los Items/Productos/Servicios ---
     items: [
         {
             _id: false,
-            // Si el producto está en tu inventario, podrías referenciarlo aquí:
-            // productoId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-            codigo: { type: String, trim: true }, // Código del producto (ej. interno o de barra)
+            codigo: { type: String, trim: true },
             descripcion: { type: String, required: true, trim: true },
             cantidad: { type: Number, required: true, min: 0.01 },
-            precioUnitario: { type: Number, required: true, min: 0 }, // Precio sin IVA
-            descuentoPorcentaje: { type: Number, default: 0, min: 0, max: 100 }, // Descuento por ítem en %
-            descuentoMonto: { type: Number, default: 0, min: 0 }, // Descuento por ítem en monto
-            importeNetoItem: { type: Number, required: true, min: 0 }, // Base imponible de este item
+            precioUnitario: { type: Number, required: true, min: 0 },
+            descuentoPorcentaje: { type: Number, default: 0, min: 0, max: 100 },
+            descuentoMonto: { type: Number, default: 0, min: 0 },
+            importeNetoItem: { type: Number, required: true, min: 0 },
             alicuotaIVA: { type: Number, required: true, min: 0 },
-            importeIVAItem: { type: Number, required: true, min: 0 }, // IVA de este item
-            importeTotalItem: { type: Number, required: true, min: 0 }, // Neto + IVA de este item
-            unidadMedida: { type: String, trim: true } // Código AFIP
+            importeIVAItem: { type: Number, required: true, min: 0 },
+            importeTotalItem: { type: Number, required: true, min: 0 },
+            unidadMedida: { type: String, trim: true }
         }
     ],
 
@@ -108,35 +102,32 @@ const facturaEmitidaSchema = new mongoose.Schema({
     importeTotal: { type: Number, required: true, min: 0 },
 
     // --- Información de Pagos ---
-    metodoPago: { // Renombrado de 'formaPago' para mayor claridad
+    metodoPago: {
         type: String,
         trim: true
-        // Podrías usar un enum aquí si tienes métodos de pago fijos:
-        // enum: ['Efectivo', 'Tarjeta de Crédito', 'Transferencia', 'Cheque', 'Mercado Pago']
     },
-    montoPagado: { // Renombrado de 'montoPago'
+    montoPagado: {
         type: Number,
         min: 0
     },
-    saldoPendiente: { // Nuevo: Si la factura no fue pagada en su totalidad
+    saldoPendiente: {
         type: Number,
         default: 0,
         min: 0
     },
-    // Si permites múltiples formas de pago para una factura
     pagos: [{
         _id: false,
         metodo: { type: String },
         monto: { type: Number },
         fecha: { type: Date, default: Date.now }
     }],
-    fechaPago: { // Nuevo: La fecha en que se registró el pago principal
+    fechaPago: {
         type: Date
     },
-    estadoPago: { // Nuevo: Para rastrear el estado del pago (ej. Pendiente, Pagado, Parcialmente Pagado)
+    estadoPago: {
         type: String,
-        enum: ['Pendiente', 'Pagado', 'Parcialmente Pagado', 'Anulado'],
-        default: 'Pendiente'
+        enum: ['Pendiente', 'Pagado', 'Parcialmente Pagado', 'Anulado', 'NO_APLICA'],
+        default: 'NO_APLICA' // Default para no fiscales
     },
 
     // --- Otras Observaciones/Leyendas ---
@@ -154,21 +145,24 @@ const facturaEmitidaSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
-    qrCodeImageUrl: { // Nuevo: Si guardas la URL de la imagen del QR
+    qrCodeImageUrl: {
         type: String,
         trim: true
     },
     ubicacion: {
         type: String
     }
-
-
 }, {
-    timestamps: true // `createdAt` para la fecha de creación del registro, `updatedAt` para la última modificación
+    timestamps: true
 });
 
-// Índice compuesto para asegurar que el número de comprobante completo sea único para cada empresa y punto de venta
-facturaEmitidaSchema.index({ numeroComprobanteCompleto: 1, owner: 1, puntoDeVenta: 1 }, { unique: true });
+// Índice compuesto para asegurar que el número de comprobante sea único para cada tipo, empresa y punto de venta
+facturaEmitidaSchema.index({ 
+    empresa: 1, 
+    puntoDeVenta: 1, 
+    numeroComprobanteInterno: 1,
+    tipoComprobante: 1 
+}, { unique: true });
 
 const FacturaEmitida = mongoose.model('FacturaEmitida', facturaEmitidaSchema);
 

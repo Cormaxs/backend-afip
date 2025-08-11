@@ -1,10 +1,15 @@
 import { createXML } from "../../services/afip/4/armarXML.js";//convierte a json
 import { create_Factura } from "../../services/facturas/ensamblar-pdf.js"; //crea la factura en pdf
 import {facEmitidasControllers} from "../../services/facturas/facturas-emitidas-controller.js"; //guarda la factura en la base de datos
-import {getNumComprobante} from "../../services/facturas/facturas_services.js";
+import {getNumComprobante, getFacturas_services} from "../../services/facturas/facturas_services.js";
+import {update_product_ventas_services} from "../../services/product_services.js"; //actualiza la cantidad de productos vendidos
+import { notaDePedidoEmitida } from '../../services/facturas/notas-de-pedido-services.js';
+import FacturaEmitidaRepository from "../../repositories/repo_facturas.js";
+import fs from 'fs/promises';
 
-export async function facturaCompleta(req, res) {
+export async function facturasCompletaAfip(req, res) {
     try {
+        console.log("Datos recibidos en facturaCompleta:", req.body); // Para depuración, puedes eliminarlo en producción
         const { id, afipRequestData, facturaData, idEmpresa,puntoVenta } = req.body; // Desestructuramos para mayor claridad
         // 2. Comunicarse con AFIP para obtener el CAE
         // El `createXML` debería lanzar un error si algo falla en la comunicación o si AFIP no responde.
@@ -83,6 +88,181 @@ export async function facturaCompleta(req, res) {
         return res.status(500).json({
             message: "Ha ocurrido un error inesperado al procesar la factura. Intente de nuevo más tarde.",
             details: error.message // Incluir el mensaje de error para depuración
+        });
+    }
+}
+
+
+
+
+const RECEPTOR_IVA_MAP = {
+    'Responsable Inscripto': { condicionIVACodigo: 1, docTipo: 80, docNro: null },
+    'Consumidor Final': { condicionIVACodigo: 5, docTipo: 99, docNro: "0" },
+    'Monotributista': { condicionIVACodigo: 4, docTipo: 80, docNro: null },
+    'Exento': { condicionIVACodigo: 3, docTipo: 80, docNro: null },
+};
+
+
+//genera todas las facturas, tanto con afip y sin afip, pero sin mandar a afip
+export async function NotaDePedido(req, res) {
+    try {
+        console.log("Datos recibidos en notasdepedidos:", req.body);
+
+        // Desestructuración de datos: extraemos los datos de factura y otros campos clave
+        const { id, idEmpresa, puntoVenta, facturaData } = req.body;
+        
+        // El id del vendedor se obtiene directamente del body, no de facturaData.comprobante
+        const idVendedor = id;
+
+        if (!idVendedor) {
+            return res.status(400).json({
+                message: "Falta el ID del vendedor.",
+                details: "El campo 'id' es obligatorio para guardar la factura."
+            });
+        }
+       // console.log("comprobante tipo -> ", facturaData.comprobante.tipo)
+        // 1. Obtener el siguiente número de comprobante para notas de pedido.
+        // Asumiendo que `FacturaEmitidaRepository` tiene una función para esto.
+
+
+        //antes de crear la factura resto la cantidad de productos
+        const restado = await update_product_ventas_services(facturaData);
+        console.log("restado -> ", restado, "datos -> ", facturaData);
+        const tipoComprobante = facturaData.comprobante.tipo;
+        const ultimoNumero = await FacturaEmitidaRepository.findLastNotaDePedidoInterno(idEmpresa, puntoVenta, tipoComprobante);
+        const nuevoNumero = ultimoNumero ? parseInt(ultimoNumero) + 1 : 1;
+       // console.log("ultimo numero -> ", ultimoNumero, "nuevo numero -> ", nuevoNumero, tipoComprobante);
+        // 2. Formatear el número de comprobante.
+        const puntoVentaFormateado = String(facturaData.comprobante.puntoVenta).padStart(5, '0');
+        const numeroComprobanteFormateado = String(nuevoNumero).padStart(8, '0');
+        const numeroComprobanteCompleto = `${puntoVentaFormateado}-${numeroComprobanteFormateado}`;
+
+        // 3. Crear el PDF.
+        // Modifica el objeto facturaData en memoria para incluir el nuevo número
+        // antes de enviarlo a la función de creación del PDF.
+        facturaData.comprobante.numero = numeroComprobanteCompleto;
+
+        // La función `create_Factura` debe devolver la ruta del archivo generado.
+        const rutaFactura = await create_Factura(facturaData, idVendedor);
+
+        // --- Mapeo y validación de datos para la base de datos ---
+        const receptorCondition = facturaData.receptor?.condicionIVA || 'Consumidor Final';
+        const receptorMap = RECEPTOR_IVA_MAP[receptorCondition] || RECEPTOR_IVA_MAP['Consumidor Final'];
+
+        const receptorData = {
+            razonSocial: facturaData.receptor?.razonSocial || "Consumidor Final",
+            cuit: facturaData.receptor?.cuit || null,
+            docTipo: receptorMap.docTipo,
+            docNro: facturaData.receptor?.docNro || receptorMap.docNro || "0",
+            condicionIVA: receptorCondition,
+            condicionIVACodigo: receptorMap.condicionIVACodigo,
+            domicilio: facturaData.receptor?.domicilio || "Sin domicilio",
+            localidad: facturaData.receptor?.localidad || "Sin localidad",
+            provincia: facturaData.receptor?.provincia || "Sin provincia",
+            email: facturaData.receptor?.email || "sin_email@example.com"
+        };
+        
+        const itemsParaGuardar = facturaData.items.map(item => {
+            // Usa valores predeterminados para evitar errores si los campos no existen
+            const precioUnitario = item.precioUnitario || 0;
+            const cantidad = item.cantidad || 0;
+            const descuentoMonto = item.descuento || 0;
+            const alicuotaIVA = item.alicuotaIVA || 0;
+            
+            // Calculos basados en la estructura del item
+            const importeNetoItem = (cantidad * precioUnitario) - descuentoMonto;
+            const importeIVAItem = importeNetoItem * (alicuotaIVA / 100);
+            const importeTotalItem = importeNetoItem + importeIVAItem;
+
+            return {
+                ...item,
+                importeNetoItem: importeNetoItem,
+                importeIVAItem: importeIVAItem,
+                importeTotalItem: importeTotalItem
+            };
+        });
+        
+        // Calcula los totales finales a partir de los ítems
+        const importeNetoFinal = itemsParaGuardar.reduce((sum, item) => sum + item.importeNetoItem, 0);
+        const importeIVAFinal = itemsParaGuardar.reduce((sum, item) => sum + item.importeIVAItem, 0);
+        const importeTotalFinal = itemsParaGuardar.reduce((sum, item) => sum + item.importeTotalItem, 0);
+
+        // Lógica de pago y saldo
+        const montoPagado = facturaData.pagos?.monto || 0;
+        const saldoPendiente = Math.max(0, importeTotalFinal - montoPagado);
+        
+        // 4. Construir el objeto final para la base de datos
+        const datosParaGuardar = {
+            empresa: idEmpresa,
+            vendedor: idVendedor,
+            puntoDeVenta: puntoVenta,
+            
+            tipoComprobante: facturaData.comprobante?.tipo || 'NOTA DE PEDIDO',
+            numeroComprobanteInterno: nuevoNumero,
+            numeroComprobanteCompleto: numeroComprobanteCompleto,
+            fechaEmision: new Date(),
+            cae: null,
+            fechaVtoCae: null,
+            estadoAFIP: 'NO_APLICA',
+            observacionesAFIP: "Comprobante no fiscal.",
+            leyendaAFIP: "Comprobante no fiscal.",
+            
+            receptor: receptorData,
+            items: itemsParaGuardar,
+            
+            importeNeto: importeNetoFinal,
+            importeIVA: importeIVAFinal,
+            importeTributos: facturaData.totales?.importeOtrosTributos || 0,
+            importeExento: facturaData.totales?.importeExento || 0,
+            importeNoGravado: facturaData.totales?.importeNetoNoGravado || 0,
+            importeTotal: importeTotalFinal,
+            
+            metodoPago: facturaData.pagos?.formaPago || "Desconocido",
+            montoPagado: montoPagado,
+            saldoPendiente: saldoPendiente,
+            pagos: [{ metodo: facturaData.pagos?.formaPago, monto: montoPagado, fecha: new Date() }],
+            fechaPago: new Date(),
+            estadoPago: saldoPendiente <= 0 ? "Pagado" : "Pendiente",
+            
+            observaciones: facturaData.observaciones || "Sin observaciones.",
+            qrDataString: null,
+            qrCodeImageUrl: null,
+            ubicacion: rutaFactura // Se guarda la ruta del archivo generado
+        };
+        
+        // 5. Guardar la nota de pedido en la base de datos.
+        await notaDePedidoEmitida(datosParaGuardar);
+
+        // 6. Leer el archivo PDF del disco y enviarlo al cliente.
+        const pdfBuffer = await fs.readFile(rutaFactura);
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="Nota_De_Pedido_X_${numeroComprobanteCompleto}.pdf"`);
+        return res.status(201).send(pdfBuffer);
+
+    } catch (err) {
+        console.error("Error en NotaDePedido (controlador):", err);
+        return res.status(500).json({
+            message: "Ha ocurrido un error al procesar la nota de pedido.",
+            details: err.message
+        });
+    }
+}
+
+
+export async function getFacturas(req, res) {
+    try{
+        const options = req.query; 
+
+        console.log("recibido -> ", options);
+        
+        const respuesta = await getFacturas_services(options);
+        res.send(respuesta); 
+    }catch(err){
+        console.error("Error en getFacturas (controlador):", err);
+        return res.status(500).json({
+            message: "Ha ocurrido un error al obtener las facturas.",
+            details: err.message
         });
     }
 }

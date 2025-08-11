@@ -7,6 +7,6 @@ export async function create_Factura(datos, id){
     const link = await GenerateURL(datos);
     const qrBase64 = await generateQrCodeBase64(link);
     const respuesta = await generateFacturaPdf(datos, id, qrBase64);
-   // console.log("respuesta", respuesta);
+   console.log("respuesta", respuesta);
     return respuesta;//retorno la ubicacion de guardado
 }
