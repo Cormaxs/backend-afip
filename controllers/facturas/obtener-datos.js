@@ -12,8 +12,9 @@ export async function facturasCompletaAfip(req, res) {
         const { id, afipRequestData, facturaData, idEmpresa,puntoVenta } = req.body; // Desestructuramos para mayor claridad
         // 2. Comunicarse con AFIP para obtener el CAE
         // El `createXML` debería lanzar un error si algo falla en la comunicación o si AFIP no responde.
+         console.log("datos desde el frontend",  id, afipRequestData, facturaData, idEmpresa,puntoVenta);
         const numero = (await getNumComprobante(idEmpresa, puntoVenta)+1);
-     
+        const restarAFacturar = await update_product_ventas_services(facturaData); //provisional
         const aprobarFactura = await createXML(afipRequestData, id, numero); 
 
         // 3. Verificar la respuesta de AFIP
@@ -102,15 +103,17 @@ const RECEPTOR_IVA_MAP = {
 };
 
 
-//genera todas las facturas, tanto con afip y sin afip, pero sin mandar a afip
+//genera todas las facturas, tanto con afip y sin afip, pero sin mandar a afip y tambien ordenes de compra
 export async function NotaDePedido(req, res) {
     try {
-
-        // Desestructuración de datos: extraemos los datos de factura y otros campos clave
         const { id, idEmpresa, puntoVenta, facturaData } = req.body;
-        
-        // El id del vendedor se obtiene directamente del body, no de facturaData.comprobante
         const idVendedor = id;
+        // console.log("Recibido en NotaDePedido:", { id, idEmpresa, puntoVenta, facturaData });
+        console.log("Procesando comprobante no fiscal:", {
+            codigoTipo: facturaData.comprobante?.codigoTipo,
+            tipo: facturaData.comprobante?.tipo,
+            esOrdenCompra: facturaData.comprobante?.codigoTipo === 'OC'
+        });
 
         if (!idVendedor) {
             return res.status(400).json({
@@ -118,26 +121,68 @@ export async function NotaDePedido(req, res) {
                 details: "El campo 'id' es obligatorio para guardar la factura."
             });
         }
-        // 1. Obtener el siguiente número de comprobante para notas de pedido.
-        // Asumiendo que `FacturaEmitidaRepository` tiene una función para esto.
 
-
-        //antes de crear la factura resto la cantidad de productos
+        // Verificar si es orden de compra
+        const esOrdenCompra = facturaData.comprobante?.codigoTipo === 'OC';
+        
+        // Restar la cantidad de productos vendidos
         const restado = await update_product_ventas_services(facturaData);
-        const tipoComprobante = facturaData.comprobante.tipo;
-        const ultimoNumero = await FacturaEmitidaRepository.findLastNotaDePedidoInterno(idEmpresa, puntoVenta, tipoComprobante);
-        const nuevoNumero = ultimoNumero ? parseInt(ultimoNumero) + 1 : 1;
-        // 2. Formatear el número de comprobante.
-        const puntoVentaFormateado = String(facturaData.comprobante.puntoVenta).padStart(5, '0');
-        const numeroComprobanteFormateado = String(nuevoNumero).padStart(8, '0');
-        const numeroComprobanteCompleto = `${puntoVentaFormateado}-${numeroComprobanteFormateado}`;
+        
+        let puntoVentaNumero, numeroInterno, numeroComprobanteCompleto;
+        
+        if (esOrdenCompra) {
+            // ORDEN DE COMPRA: Usar datos directamente del frontend
+            console.log("Procesando ORDEN DE COMPRA con datos del frontend");
+            
+            // Usar puntoVentaNumero del frontend o el valor por defecto
+            puntoVentaNumero = facturaData.comprobante.puntoVentaNumero || facturaData.comprobante.puntoVenta || puntoVenta;
+            
+            // Usar numeroOrden del frontend o generar uno nuevo
+            if (facturaData.comprobante.numeroOrden) {
+                // Si viene del frontend, usar ese número directamente
+                numeroInterno = facturaData.comprobante.numeroOrden;
+                console.log("Usando numeroOrden del frontend:", numeroInterno);
+            } else {
+                // Si no viene, generar el siguiente número
+                const ultimoNumero = await FacturaEmitidaRepository.findLastNotaDePedidoInterno(
+                    idEmpresa, 
+                    puntoVentaNumero, 
+                    facturaData.comprobante.tipo
+                );
+                numeroInterno = ultimoNumero ? parseInt(ultimoNumero) + 1 : 1;
+                console.log("Generando nuevo número para orden de compra:", numeroInterno);
+            }
+            
+            // Formatear usando los datos del frontend
+            const puntoVentaFormateado = String(puntoVentaNumero).padStart(5, '0');
+            const numeroComprobanteFormateado = String(numeroInterno).padStart(8, '0');
+            numeroComprobanteCompleto = `${puntoVentaFormateado}-${numeroComprobanteFormateado}`;
+            
+            // Actualizar facturaData con los valores que vienen del frontend
+            facturaData.comprobante.puntoVenta = puntoVentaNumero;
+            facturaData.comprobante.numero = numeroComprobanteCompleto;
+            
+        } else {
+            // NOTA DE PEDIDO: Mantener lógica original
+            console.log("Procesando NOTA DE PEDIDO con lógica original");
+            
+            const tipoComprobante = facturaData.comprobante.tipo;
+            const ultimoNumero = await FacturaEmitidaRepository.findLastNotaDePedidoInterno(
+                idEmpresa, 
+                puntoVenta, 
+                tipoComprobante
+            );
+            numeroInterno = ultimoNumero ? parseInt(ultimoNumero) + 1 : 1;
+            
+            const puntoVentaFormateado = String(facturaData.comprobante.puntoVenta).padStart(5, '0');
+            const numeroComprobanteFormateado = String(numeroInterno).padStart(8, '0');
+            numeroComprobanteCompleto = `${puntoVentaFormateado}-${numeroComprobanteFormateado}`;
+            
+            facturaData.comprobante.numero = numeroComprobanteCompleto;
+            puntoVentaNumero = facturaData.comprobante.puntoVenta;
+        }
 
-        // 3. Crear el PDF.
-        // Modifica el objeto facturaData en memoria para incluir el nuevo número
-        // antes de enviarlo a la función de creación del PDF.
-        facturaData.comprobante.numero = numeroComprobanteCompleto;
-
-        // La función `create_Factura` debe devolver la ruta del archivo generado.
+        // Crear el PDF usando los datos actualizados
         const rutaFactura = await create_Factura(facturaData, idVendedor);
 
         // --- Mapeo y validación de datos para la base de datos ---
@@ -148,7 +193,7 @@ export async function NotaDePedido(req, res) {
             razonSocial: facturaData.receptor?.razonSocial || "Consumidor Final",
             cuit: facturaData.receptor?.cuit || null,
             docTipo: receptorMap.docTipo,
-            docNro: facturaData.receptor?.docNro || receptorMap.docNro || "0",
+            docNro: facturaData.receptor?.cuit ? facturaData.receptor.cuit.replace(/-/g, '') : receptorMap.docNro || "0",
             condicionIVA: receptorCondition,
             condicionIVACodigo: receptorMap.condicionIVACodigo,
             domicilio: facturaData.receptor?.domicilio || "Sin domicilio",
@@ -158,13 +203,11 @@ export async function NotaDePedido(req, res) {
         };
         
         const itemsParaGuardar = facturaData.items.map(item => {
-            // Usa valores predeterminados para evitar errores si los campos no existen
             const precioUnitario = item.precioUnitario || 0;
             const cantidad = item.cantidad || 0;
             const descuentoMonto = item.descuento || 0;
             const alicuotaIVA = item.alicuotaIVA || 0;
             
-            // Calculos basados en la estructura del item
             const importeNetoItem = (cantidad * precioUnitario) - descuentoMonto;
             const importeIVAItem = importeNetoItem * (alicuotaIVA / 100);
             const importeTotalItem = importeNetoItem + importeIVAItem;
@@ -177,25 +220,23 @@ export async function NotaDePedido(req, res) {
             };
         });
         
-        // Calcula los totales finales a partir de los ítems
         const importeNetoFinal = itemsParaGuardar.reduce((sum, item) => sum + item.importeNetoItem, 0);
         const importeIVAFinal = itemsParaGuardar.reduce((sum, item) => sum + item.importeIVAItem, 0);
         const importeTotalFinal = itemsParaGuardar.reduce((sum, item) => sum + item.importeTotalItem, 0);
 
-        // Lógica de pago y saldo
         const montoPagado = facturaData.pagos?.monto || 0;
         const saldoPendiente = Math.max(0, importeTotalFinal - montoPagado);
         
-        // 4. Construir el objeto final para la base de datos
+        // Construir el objeto final para la base de datos
         const datosParaGuardar = {
             empresa: idEmpresa,
             vendedor: idVendedor,
-            puntoDeVenta: puntoVenta,
+            puntoDeVenta: puntoVenta || '',
             
-            tipoComprobante: facturaData.comprobante?.tipo || 'NOTA DE PEDIDO',
-            numeroComprobanteInterno: nuevoNumero,
+            tipoComprobante: facturaData.comprobante?.tipo || (esOrdenCompra ? 'ORDEN DE COMPRA' : 'NOTA DE PEDIDO'),
+            numeroComprobanteInterno: numeroInterno,
             numeroComprobanteCompleto: numeroComprobanteCompleto,
-            fechaEmision: new Date(),
+            fechaEmision: new Date(facturaData.comprobante.fecha) || new Date(),
             cae: null,
             fechaVtoCae: null,
             estadoAFIP: 'NO_APLICA',
@@ -215,24 +256,33 @@ export async function NotaDePedido(req, res) {
             metodoPago: facturaData.pagos?.formaPago || "Desconocido",
             montoPagado: montoPagado,
             saldoPendiente: saldoPendiente,
-            pagos: [{ metodo: facturaData.pagos?.formaPago, monto: montoPagado, fecha: new Date() }],
+            pagos: [{ 
+                metodo: facturaData.pagos?.formaPago, 
+                monto: montoPagado, 
+                fecha: new Date() 
+            }],
             fechaPago: new Date(),
             estadoPago: saldoPendiente <= 0 ? "Pagado" : "Pendiente",
             
             observaciones: facturaData.observaciones || "Sin observaciones.",
             qrDataString: null,
             qrCodeImageUrl: null,
-            ubicacion: rutaFactura // Se guarda la ruta del archivo generado
+            ubicacion: rutaFactura
         };
         
-        // 5. Guardar la nota de pedido en la base de datos.
+        // Guardar la nota de pedido/orden de compra en la base de datos
         await notaDePedidoEmitida(datosParaGuardar);
 
-        // 6. Leer el archivo PDF del disco y enviarlo al cliente.
+        // Leer el archivo PDF del disco y enviarlo al cliente
         const pdfBuffer = await fs.readFile(rutaFactura);
         
+        // Nombre del archivo según tipo
+        const nombreArchivo = esOrdenCompra 
+            ? `Orden_Compra_${numeroComprobanteCompleto}.pdf`
+            : `Nota_De_Pedido_X_${numeroComprobanteCompleto}.pdf`;
+        
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="Nota_De_Pedido_X_${numeroComprobanteCompleto}.pdf"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${nombreArchivo}"`);
         return res.status(201).send(pdfBuffer);
 
     } catch (err) {
